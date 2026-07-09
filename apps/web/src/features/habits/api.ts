@@ -1,6 +1,7 @@
 import { kyClient } from "@/lib/kyClient";
 import type {
   Board,
+  Completion,
   CreateHabitRequest,
   CreateSubGroupRequest,
   DayActivity,
@@ -11,6 +12,7 @@ import type {
   ReorderHabitItem,
   StartSessionRequest,
   StopSessionRequest,
+  TapOutRequest,
   ToggleCompletionRequest,
   UpdateDayRunRequest,
   UpdateGroupRequest,
@@ -41,7 +43,9 @@ export const reorderHabits = (items: ReorderHabitItem[]) =>
   kyClient.put("habits/reorder", { json: { items } });
 
 export const toggleCompletion = (data: ToggleCompletionRequest) =>
-  kyClient.post("habits/completions/toggle", { json: data }).json<{ habit_id: number; date: string } | null>();
+  kyClient
+    .post("habits/completions/toggle", { json: data })
+    .json<Completion | null>();
 
 export const fetchDayActivity = (date?: string) =>
   kyClient
@@ -66,3 +70,6 @@ export const fetchDayRun = (date?: string) =>
 
 export const updateDayRun = (data: UpdateDayRunRequest) =>
   kyClient.patch("habits/day-run", { json: data }).json<DayRun>();
+
+export const tapOutDay = (data: TapOutRequest = {}) =>
+  kyClient.post("habits/day-run/tap-out", { json: data }).json<DayRun>();

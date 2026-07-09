@@ -12,6 +12,7 @@ const defaults: FormState = {
   break_minutes: 5,
   wake_time: "07:00",
   bed_time: "23:00",
+  day_start_time: "04:00",
   default_habit_minutes: 60,
   playlist_minutes: 53,
   loop_exempt_below_minutes: 60,
@@ -84,6 +85,22 @@ export default function SettingsPage() {
                   setForm((prev) => ({ ...prev, bed_time: e.target.value }))
                 }
               />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="day_start_time">Next day starts at</Label>
+              <Input
+                id="day_start_time"
+                type="time"
+                value={form.day_start_time}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, day_start_time: e.target.value }))
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Like Anki: before this time, tallies and day progress still count as
+                yesterday. Set to when your day actually ends (e.g. 1:00 AM if you
+                go to bed after midnight).
+              </p>
             </div>
           </div>
         </section>

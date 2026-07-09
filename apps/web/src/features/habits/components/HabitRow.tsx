@@ -5,6 +5,7 @@ import { IconTooltipButton, IconTooltipWrap } from "@/components/ui/icon-tooltip
 import { cn } from "@/lib/utils";
 import type { Completion, Habit } from "../types";
 import { getLinkedCellState } from "../lib/linkedHabits";
+import { getCellProgress, getCompletion } from "../lib/completionUtils";
 import { getSubCategoryColor } from "../lib/subCategoryColors";
 import { formatDurationMinutes } from "../lib/dayEstimate";
 import TallyCell from "./TallyCell";
@@ -15,8 +16,8 @@ type HabitRowProps = {
   dates: string[];
   allHabits: Habit[];
   completions: Completion[];
-  completionSet: Set<string>;
   subGroupColors: Record<number, string>;
+  subGroupNames: Record<number, string>;
   groupColorId?: string;
   onToggle: (habitId: number, date: string) => void;
   onRename: (habit: Habit) => void;
@@ -29,8 +30,8 @@ export default function HabitRow({
   dates,
   allHabits,
   completions,
-  completionSet,
   subGroupColors,
+  subGroupNames,
   groupColorId,
   onToggle,
   onRename,
@@ -45,8 +46,17 @@ export default function HabitRow({
   };
 
   const isLinked = habit.linked_sub_group_id != null;
+  const linkedSubGroupId = habit.linked_sub_group_id;
+  const linkedSubName =
+    linkedSubGroupId != null ? subGroupNames[linkedSubGroupId] : undefined;
+  const linkedTooltip = linkedSubName
+    ? `Linked to “${linkedSubName}” — complete habits in the sub-category`
+    : "Linked sub-category habit — not checkable here";
+  const linkedNameTooltip = linkedSubName
+    ? `Linked to “${linkedSubName}” — click to jump there`
+    : "Linked sub-category — click to jump there";
   const linkedColor = isLinked
-    ? getSubCategoryColor(subGroupColors[habit.linked_sub_group_id!])
+    ? getSubCategoryColor(subGroupColors[linkedSubGroupId!])
     : undefined;
   const groupColor = groupColorId ? getSubCategoryColor(groupColorId) : undefined;
   const label = String(index + 1).padStart(2, "0");
@@ -77,12 +87,12 @@ export default function HabitRow({
           {label}
         </span>
         {isLinked ? (
-          <IconTooltipWrap tooltip="Go to sub-category">
+          <IconTooltipWrap tooltip={linkedNameTooltip}>
             <button
               type="button"
-              onClick={() => onLinkedClick?.(habit.linked_sub_group_id!)}
+              onClick={() => onLinkedClick?.(linkedSubGroupId!)}
               className={cn(
-                "truncate text-sm font-medium hover:underline",
+                "cursor-help truncate text-sm font-medium hover:underline",
                 linkedColor?.textLinked,
               )}
               style={linkedColor?.styles?.textLinked}
@@ -142,17 +152,25 @@ export default function HabitRow({
           );
 
           if (linkedState.kind === "empty") {
-            return <TallyCell key={dateStr} checked={false} variant="empty" />;
+            return (
+              <TallyCell
+                key={dateStr}
+                checked={false}
+                variant="empty"
+                tooltip={isLinked ? linkedTooltip : undefined}
+              />
+            );
           }
 
           if (linkedState.kind === "linked") {
             return (
               <TallyCell
                 key={dateStr}
-                checked={linkedState.checked}
+                progress={linkedState.progress}
                 variant="linked"
                 accentColor={linkedColor}
                 accentTone="linked"
+                tooltip={linkedTooltip}
               />
             );
           }
@@ -160,7 +178,7 @@ export default function HabitRow({
           return (
             <TallyCell
               key={dateStr}
-              checked={completionSet.has(`${habit.id}:${dateStr}`)}
+              progress={getCellProgress(getCompletion(completions, habit.id, dateStr))}
               accentColor={groupColor}
               accentTone="full"
               onToggle={() => onToggle(habit.id, dateStr)}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -26,8 +26,10 @@ type HabitTableProps = {
   groupColorId?: string;
   habits: Habit[];
   lookbackDays: number;
+  dayStartTime: string;
   completions: Completion[];
   subGroupColors: Record<number, string>;
+  subGroupNames: Record<number, string>;
   onToggle: (data: ToggleCompletionRequest) => void;
   onLinkedClick?: (subGroupId: number) => void;
 };
@@ -37,23 +39,20 @@ export default function HabitTable({
   groupColorId,
   habits,
   lookbackDays,
+  dayStartTime,
   completions,
   subGroupColors,
+  subGroupNames,
   onToggle,
   onLinkedClick,
 }: HabitTableProps) {
-  const dates = getVisibleDates(lookbackDays);
+  const dates = getVisibleDates(lookbackDays, dayStartTime);
   const { mutate: reorder } = useReorderHabits();
   const [renaming, setRenaming] = useState<Habit | null>(null);
 
   const sorted = [...habits]
     .filter((h) => h.group_id === groupId)
     .sort((a, b) => a.sort_order - b.sort_order);
-
-  const completionSet = useMemo(
-    () => new Set(completions.map((c) => `${c.habit_id}:${c.date}`)),
-    [completions],
-  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -103,8 +102,8 @@ export default function HabitTable({
                     dates={dates}
                     allHabits={habits}
                     completions={completions}
-                    completionSet={completionSet}
                     subGroupColors={subGroupColors}
+                    subGroupNames={subGroupNames}
                     groupColorId={groupColorId}
                     onToggle={(habitId, date) =>
                       onToggle({ habit_id: habitId, date })

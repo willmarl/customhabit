@@ -16,6 +16,7 @@ class AppSettings(SQLModel, table=True):
     break_minutes: int = Field(default=5)
     wake_time: str = Field(default="07:00")
     bed_time: str = Field(default="23:00")
+    day_start_time: str = Field(default="04:00")
     default_habit_minutes: int = Field(default=60)
     playlist_minutes: int = Field(default=53)
     # Habits shorter than this are exempt from double-loop in loop mode (Phase 3).
@@ -27,6 +28,7 @@ class AppSettingsRead(SQLModel):
     break_minutes: int
     wake_time: str
     bed_time: str
+    day_start_time: str
     default_habit_minutes: int
     playlist_minutes: int
     loop_exempt_below_minutes: int
@@ -37,6 +39,7 @@ class AppSettingsUpdate(SQLModel):
     break_minutes: Optional[int] = None
     wake_time: Optional[str] = None
     bed_time: Optional[str] = None
+    day_start_time: Optional[str] = None
     default_habit_minutes: Optional[int] = None
     playlist_minutes: Optional[int] = None
     loop_exempt_below_minutes: Optional[int] = None

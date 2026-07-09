@@ -76,8 +76,8 @@ def migrate_schema() -> None:
         _add_column_if_missing(
             conn,
             "appsettings",
-            "loop_exempt_below_minutes",
-            "ALTER TABLE appsettings ADD COLUMN loop_exempt_below_minutes INTEGER NOT NULL DEFAULT 60",
+            "day_start_time",
+            "ALTER TABLE appsettings ADD COLUMN day_start_time TEXT NOT NULL DEFAULT '04:00'",
         )
         _add_column_if_missing(
             conn,
@@ -90,6 +90,24 @@ def migrate_schema() -> None:
             "habitsession",
             "completion_id",
             "ALTER TABLE habitsession ADD COLUMN completion_id INTEGER REFERENCES completion(id)",
+        )
+        _add_column_if_missing(
+            conn,
+            "completion",
+            "loops_done",
+            "ALTER TABLE completion ADD COLUMN loops_done INTEGER NOT NULL DEFAULT 1",
+        )
+        _add_column_if_missing(
+            conn,
+            "completion",
+            "loops_target",
+            "ALTER TABLE completion ADD COLUMN loops_target INTEGER NOT NULL DEFAULT 1",
+        )
+        _add_column_if_missing(
+            conn,
+            "completion",
+            "status",
+            "ALTER TABLE completion ADD COLUMN status TEXT NOT NULL DEFAULT 'done'",
         )
 
 

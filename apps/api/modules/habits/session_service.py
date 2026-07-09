@@ -3,6 +3,8 @@ from datetime import date, datetime
 from fastapi import HTTPException
 from sqlmodel import Session, select
 
+from lib.dates import resolve_habit_date
+from modules.settings.service import SettingsService
 from .schemas import (
     Completion,
     DayActivityResponse,
@@ -24,7 +26,10 @@ class SessionService:
         self.session = session
 
     def _resolve_date(self, d: date | None) -> date:
-        return d or date.today()
+        if d is not None:
+            return d
+        settings = SettingsService(self.session).get()
+        return resolve_habit_date(day_start=settings.day_start_time)
 
     def _ensure_day_run(self, run_date: date, started_at: datetime) -> DayRun:
         day_run = self.session.get(DayRun, run_date)
@@ -84,7 +89,7 @@ class SessionService:
         if habit.linked_sub_group_id is not None:
             raise HTTPException(status_code=400, detail="Cannot time linked core rows")
 
-        run_date = self._resolve_date(data.date)
+        run_date = self._resolve_date(data.session_date)
         now = datetime.now()
         self._stop_active_sessions(run_date, now)
         self._ensure_day_run(run_date, now)
@@ -143,8 +148,40 @@ class SessionService:
                 continue
             if key in ("status", "mode") and value is not None:
                 setattr(day_run, key, value.value)
+                if key == "status" and value == DayRunStatus.active:
+                    day_run.tap_out_at = None
             else:
                 setattr(day_run, key, value)
+        self.session.add(day_run)
+        self.session.commit()
+        self.session.refresh(day_run)
+        return DayRunRead.from_row(day_run)
+
+    def ensure_day_run(self, run_date: date, started_at: datetime) -> DayRun:
+        return self._ensure_day_run(run_date, started_at)
+
+    def update_inferred_completion(
+        self, completion_id: int, run_date: date, completed_at: datetime
+    ) -> None:
+        session_row = self.session.exec(
+            select(HabitSession).where(HabitSession.completion_id == completion_id)
+        ).first()
+        if not session_row:
+            return
+        session_row.ended_at = completed_at
+        session_row.duration_seconds = max(
+            0, int((completed_at - session_row.started_at).total_seconds())
+        )
+        self.session.add(session_row)
+
+    def tap_out(self, run_date: date | None) -> DayRunRead:
+        d = self._resolve_date(run_date)
+        now = datetime.now()
+        day_run = self.session.get(DayRun, d)
+        if not day_run:
+            day_run = DayRun(run_date=d, started_at=now)
+        day_run.status = DayRunStatus.tap_out.value
+        day_run.tap_out_at = now
         self.session.add(day_run)
         self.session.commit()
         self.session.refresh(day_run)

@@ -5,6 +5,7 @@ export type AppSettings = {
   break_minutes: number;
   wake_time: string;
   bed_time: string;
+  day_start_time: string;
   default_habit_minutes: number;
   playlist_minutes: number;
   loop_exempt_below_minutes: number;
@@ -34,6 +35,19 @@ export type Habit = {
 export type Completion = {
   habit_id: number;
   date: string;
+  loops_done: number;
+  loops_target: number;
+  status: "pending" | "partial" | "done" | "skipped_in_zone";
+};
+
+export type DayRun = {
+  date: string;
+  started_at: string | null;
+  ended_at: string | null;
+  tap_out_at: string | null;
+  status: "active" | "completed" | "tap_out";
+  mode: "normal" | "loop_30" | "in_zone";
+  loop_count: number;
 };
 
 export type Board = {
@@ -42,6 +56,7 @@ export type Board = {
   habits: Habit[];
   completions: Completion[];
   settings: AppSettings;
+  day_run: DayRun | null;
 };
 
 export type CreateSubGroupRequest = { name: string };
@@ -75,15 +90,7 @@ export type HabitSession = {
   source: string;
 };
 
-export type DayRun = {
-  date: string;
-  started_at: string | null;
-  ended_at: string | null;
-  tap_out_at: string | null;
-  status: "active" | "completed" | "tap_out";
-  mode: "normal" | "loop_30" | "in_zone";
-  loop_count: number;
-};
+export type TapOutRequest = { date?: string };
 
 export type DayActivity = {
   day_run: DayRun | null;

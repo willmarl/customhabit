@@ -17,6 +17,7 @@ from .schemas import (
     ReorderHabitsRequest,
     StartSessionRequest,
     StopSessionRequest,
+    TapOutRequest,
     ToggleCompletionRequest,
     UpdateDayRunRequest,
     UpdateGroupRequest,
@@ -72,24 +73,6 @@ async def create_habit(
     service: HabitService = Depends(get_habit_service),
 ):
     return service.create_habit(data)
-
-
-@router.patch("/{habit_id}", response_model=HabitRead)
-async def update_habit(
-    habit_id: int,
-    data: UpdateHabitRequest,
-    service: HabitService = Depends(get_habit_service),
-):
-    return service.update_habit(habit_id, data)
-
-
-@router.delete("/{habit_id}", status_code=204)
-async def delete_habit(
-    habit_id: int,
-    service: HabitService = Depends(get_habit_service),
-):
-    service.delete_habit(habit_id)
-    return Response(status_code=204)
 
 
 @router.put("/reorder", status_code=204)
@@ -155,3 +138,30 @@ async def update_day_run(
     service: SessionService = Depends(get_session_service),
 ):
     return service.update_day_run(data)
+
+
+@router.post("/day-run/tap-out", response_model=DayRunRead)
+async def tap_out_day(
+    data: TapOutRequest,
+    service: SessionService = Depends(get_session_service),
+):
+    return service.tap_out(data.tap_date)
+
+
+# Parameterized habit routes last — otherwise "/day-run" matches habit_id
+@router.patch("/{habit_id}", response_model=HabitRead)
+async def update_habit(
+    habit_id: int,
+    data: UpdateHabitRequest,
+    service: HabitService = Depends(get_habit_service),
+):
+    return service.update_habit(habit_id, data)
+
+
+@router.delete("/{habit_id}", status_code=204)
+async def delete_habit(
+    habit_id: int,
+    service: HabitService = Depends(get_habit_service),
+):
+    service.delete_habit(habit_id)
+    return Response(status_code=204)

@@ -1,52 +1,58 @@
-import { useCallback, useMemo, useOptimistic } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import confetti from "canvas-confetti";
 import { Plus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { IconTooltipButton } from "@/components/ui/icon-tooltip";
 import { cn } from "@/lib/utils";
+import { formatDateISO, getHabitDate } from "@/lib/dates";
 import { useModal } from "@/components/providers/ModalProvider";
 import { useBoard, useToggleCompletion } from "../hooks";
-import type { Completion, ToggleCompletionRequest } from "../types";
+import type { ToggleCompletionRequest } from "../types";
+import { allStackHabitsDone } from "../lib/completionUtils";
 import HabitGroupSection from "./HabitGroupSection";
 import CreateSubCategoryDialog from "./CreateSubCategoryDialog";
 import DayEstimateBar from "./DayEstimateBar";
-
-function toggleCompletionReducer(
-  state: Completion[],
-  action: ToggleCompletionRequest,
-): Completion[] {
-  const exists = state.some(
-    (c) => c.habit_id === action.habit_id && c.date === action.date,
-  );
-  if (exists) {
-    return state.filter(
-      (c) => !(c.habit_id === action.habit_id && c.date === action.date),
-    );
-  }
-  return [...state, { habit_id: action.habit_id, date: action.date }];
-}
+import DayModeBar from "./DayModeBar";
+import LoopIterationBar from "./LoopIterationBar";
+import { useLoopModeUi } from "../hooks/useLoopModeUi";
 
 export default function HabitBoard() {
   const { data: board, isLoading, isError } = useBoard();
   const { mutate: toggleCompletion } = useToggleCompletion();
+  const { enabled: loopViewEnabled, toggle: toggleLoopView } = useLoopModeUi();
   const { openModal, closeModal } = useModal();
-
-  const [optimisticCompletions, addOptimisticCompletion] = useOptimistic(
-    board?.completions ?? [],
-    toggleCompletionReducer,
-  );
+  const confettiFired = useRef(false);
+  const today = getHabitDate(new Date(), board?.settings.day_start_time);
 
   const handleToggle = useCallback(
     (data: ToggleCompletionRequest) => {
-      addOptimisticCompletion(data);
       toggleCompletion(data);
     },
-    [addOptimisticCompletion, toggleCompletion],
+    [toggleCompletion],
   );
+
+  const completions = board?.completions ?? [];
 
   const subGroupColors = useMemo(
     () => Object.fromEntries(board?.sub_groups.map((g) => [g.id, g.color]) ?? []),
     [board?.sub_groups],
   );
+
+  const allDone = useMemo(
+    () => (board ? allStackHabitsDone(board, completions, today) : false),
+    [board, completions, today],
+  );
+
+  useEffect(() => {
+    if (!board || board.day_run?.status === "tap_out") return;
+    if (allDone && !confettiFired.current) {
+      confettiFired.current = true;
+      confetti({ particleCount: 120, spread: 70, origin: { y: 0.65 } });
+    }
+    if (!allDone) {
+      confettiFired.current = false;
+    }
+  }, [allDone, board]);
 
   const scrollToSub = (subGroupId: number) => {
     document.getElementById(`sub-${subGroupId}`)?.scrollIntoView({
@@ -107,13 +113,20 @@ export default function HabitBoard() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-10 px-6 py-8 text-left">
-      <DayEstimateBar board={board} />
+    <div className="mx-auto max-w-3xl space-y-6 px-6 py-8 text-left">
+      <DayModeBar board={board} />
+      <LoopIterationBar
+        board={board}
+        completions={completions}
+        enabled={loopViewEnabled}
+        onToggle={toggleLoopView}
+      />
+      <DayEstimateBar board={board} completions={completions} />
 
       <HabitGroupSection
         group={board.core_group}
         board={board}
-        completions={optimisticCompletions}
+        completions={completions}
         subGroupColors={subGroupColors}
         onToggle={handleToggle}
         isCore
@@ -142,7 +155,7 @@ export default function HabitBoard() {
                 <HabitGroupSection
                   group={group}
                   board={board}
-                  completions={optimisticCompletions}
+                  completions={completions}
                   subGroupColors={subGroupColors}
                   onToggle={handleToggle}
                 />

@@ -3,7 +3,10 @@ from datetime import date, datetime, timedelta
 from fastapi import HTTPException
 from sqlmodel import Session, select, delete
 
+from lib.dates import resolve_habit_date
 from modules.settings.service import SettingsService
+from .completion_logic import loops_after_toggle
+from .schemas import DayRun, DayRunRead
 from .session_service import SessionService
 from .schemas import (
     BoardResponse,
@@ -77,7 +80,7 @@ class HabitService:
             ).all()
         )
 
-        today = date.today()
+        today = resolve_habit_date(day_start=settings.day_start_time)
         start = today - timedelta(days=settings.lookback_days - 1)
         habit_ids = [h.id for h in habits]
         completions: list[Completion] = []
@@ -95,8 +98,13 @@ class HabitService:
             core_group=HabitGroupRead.model_validate(core),
             sub_groups=[HabitGroupRead.model_validate(g) for g in sub_groups],
             habits=[HabitRead.model_validate(h) for h in habits],
-            completions=[CompletionRead(habit_id=c.habit_id, date=c.date) for c in completions],
+            completions=[CompletionRead.from_row(c) for c in completions],
             settings=settings,
+            day_run=(
+                DayRunRead.from_row(dr)
+                if (dr := self.session.get(DayRun, today))
+                else None
+            ),
         )
 
     def create_sub_group(self, data: CreateSubGroupRequest) -> BoardResponse:
@@ -282,6 +290,10 @@ class HabitService:
                 detail="Linked core habits are completed automatically from their sub-category",
             )
 
+        settings = SettingsService(self.session).get()
+        day_run = self.session.get(DayRun, data.date)
+        session_svc = SessionService(self.session)
+
         existing = self.session.exec(
             select(Completion).where(
                 Completion.habit_id == data.habit_id,
@@ -289,21 +301,48 @@ class HabitService:
             )
         ).first()
 
-        if existing:
-            if existing.id is not None:
-                SessionService(self.session).remove_inferred_completion(existing.id)
-            self.session.delete(existing)
-            self.session.commit()
+        result = loops_after_toggle(
+            self.session, habit, data.date, day_run, settings, existing
+        )
+
+        if result is None:
+            if existing:
+                if existing.id is not None:
+                    session_svc.remove_inferred_completion(existing.id)
+                self.session.delete(existing)
+                self.session.commit()
             return None
 
+        loops_done, loops_target, status = result
         now = datetime.now()
-        completion = Completion(
-            habit_id=data.habit_id, date=data.date, completed_at=now
-        )
-        self.session.add(completion)
-        self.session.flush()
-        SessionService(self.session).record_inferred_completion(
-            data.habit_id, data.date, completion.id, now
-        )
+
+        if existing is None:
+            completion = Completion(
+                habit_id=data.habit_id,
+                date=data.date,
+                completed_at=now,
+                loops_done=loops_done,
+                loops_target=loops_target,
+                status=status,
+            )
+            self.session.add(completion)
+            self.session.flush()
+            session_svc.record_inferred_completion(
+                data.habit_id, data.date, completion.id, now
+            )
+        else:
+            existing.loops_done = loops_done
+            existing.loops_target = loops_target
+            existing.status = status
+            existing.completed_at = now
+            self.session.add(existing)
+            if existing.id is not None:
+                session_svc.update_inferred_completion(existing.id, data.date, now)
+            completion = existing
+
+        if day_run is None and data.date == resolve_habit_date(day_start=settings.day_start_time):
+            session_svc.ensure_day_run(data.date, now)
+
         self.session.commit()
-        return CompletionRead(habit_id=data.habit_id, date=data.date)
+        self.session.refresh(completion)
+        return CompletionRead.from_row(completion)

@@ -1,3 +1,4 @@
+import { compareFinishToBed, parseTimeOnDate, resolveBedtime } from "@/lib/dates";
 import type { AppSettings, Board, Habit } from "../types";
 
 export type StackHabit = Pick<Habit, "id" | "duration_minutes" | "once_per_day" | "name">;
@@ -53,19 +54,13 @@ export function estimateDayMinutes(board: Board): number {
   return habitMinutes + breaks;
 }
 
-function parseTimeOnDate(timeHHMM: string, base: Date): Date {
-  const [h, m] = timeHHMM.split(":").map(Number);
-  const d = new Date(base);
-  d.setHours(h, m, 0, 0);
-  return d;
-}
-
 export type DayEstimate = {
   totalMinutes: number;
   habitCount: number;
   finishAt: Date;
   bedAt: Date;
   minutesPastBed: number;
+  minutesBeforeBed: number;
   overtimeSeverity: "none" | "mild" | "moderate" | "severe";
 };
 
@@ -73,27 +68,18 @@ export function computeDayEstimate(board: Board, now = new Date()): DayEstimate 
   const items = getStackHabits(board);
   const totalMinutes = estimateDayMinutes(board);
   const finishAt = new Date(now.getTime() + totalMinutes * 60_000);
-  const bedAt = parseTimeOnDate(board.settings.bed_time, now);
-
-  let minutesPastBed = 0;
-  if (finishAt > bedAt) {
-    minutesPastBed = Math.ceil((finishAt.getTime() - bedAt.getTime()) / 60_000);
-  }
-
-  let overtimeSeverity: DayEstimate["overtimeSeverity"] = "none";
-  if (minutesPastBed > 0) {
-    if (minutesPastBed <= 15) overtimeSeverity = "mild";
-    else if (minutesPastBed <= 45) overtimeSeverity = "moderate";
-    else overtimeSeverity = "severe";
-  }
+  const { bed_time, wake_time } = board.settings;
+  const bedAt = resolveBedtime(bed_time, wake_time, now);
+  const bedCompare = compareFinishToBed(finishAt, bed_time, wake_time, now);
 
   return {
     totalMinutes,
     habitCount: items.length,
     finishAt,
     bedAt,
-    minutesPastBed,
-    overtimeSeverity,
+    minutesPastBed: bedCompare.minutesPastBed,
+    minutesBeforeBed: bedCompare.minutesBeforeBed,
+    overtimeSeverity: bedCompare.overtimeSeverity,
   };
 }
 
@@ -103,3 +89,6 @@ export function formatFinishTime(date: Date): string {
     minute: "2-digit",
   });
 }
+
+// Re-export for any callers that used parseTimeOnDate from here.
+export { parseTimeOnDate, resolveBedtime };

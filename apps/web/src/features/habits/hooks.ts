@@ -9,6 +9,7 @@ import {
   reorderHabits,
   startSession,
   stopSession,
+  tapOutDay,
   toggleCompletion,
   updateGroup,
   updateDayRun,
@@ -20,15 +21,16 @@ import type {
   ReorderHabitItem,
   StartSessionRequest,
   StopSessionRequest,
+  TapOutRequest,
   ToggleCompletionRequest,
   UpdateDayRunRequest,
   UpdateGroupRequest,
   UpdateHabitRequest,
 } from "./types";
-import { formatDateISO } from "@/lib/dates";
+import { getHabitDate } from "@/lib/dates";
 
 const BOARD_KEY = ["habits", "board"];
-const today = () => formatDateISO(new Date());
+const today = () => getHabitDate();
 const activityKey = (date?: string) => ["habits", "activity", date ?? today()];
 
 export const useBoard = () =>
@@ -96,28 +98,8 @@ export const useToggleCompletion = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: ToggleCompletionRequest) => toggleCompletion(data),
-    onMutate: (data) => {
-      void queryClient.cancelQueries({ queryKey: BOARD_KEY });
-      const previous = queryClient.getQueryData<import("./types").Board>(BOARD_KEY);
-      if (previous) {
-        const exists = previous.completions.some(
-          (c) => c.habit_id === data.habit_id && c.date === data.date,
-        );
-        queryClient.setQueryData(BOARD_KEY, {
-          ...previous,
-          completions: exists
-            ? previous.completions.filter(
-                (c) => !(c.habit_id === data.habit_id && c.date === data.date),
-              )
-            : [...previous.completions, { habit_id: data.habit_id, date: data.date }],
-        });
-      }
-      return { previous };
-    },
-    onError: (_err, _data, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(BOARD_KEY, context.previous);
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BOARD_KEY });
     },
   });
 };
@@ -155,7 +137,18 @@ export const useUpdateDayRun = () => {
   return useMutation({
     mutationFn: (data: UpdateDayRunRequest) => updateDayRun(data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BOARD_KEY });
       queryClient.invalidateQueries({ queryKey: activityKey() });
+    },
+  });
+};
+
+export const useTapOut = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: TapOutRequest) => tapOutDay(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BOARD_KEY });
     },
   });
 };

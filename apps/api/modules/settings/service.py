@@ -39,7 +39,7 @@ class SettingsService:
             raise HTTPException(
                 status_code=400, detail="loop_exempt_below_minutes cannot be negative"
             )
-        for key in ("wake_time", "bed_time"):
+        for key in ("wake_time", "bed_time", "day_start_time"):
             if key in payload and not is_valid_time_hhmm(payload[key]):
                 raise HTTPException(status_code=400, detail=f"{key} must be HH:MM (24h)")
 

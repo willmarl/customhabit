@@ -63,11 +63,21 @@ def parse_duration_suffix(name: str) -> tuple[str, Optional[int]]:
     return stripped, minutes
 
 
+class CompletionStatus(str, Enum):
+    pending = "pending"
+    partial = "partial"
+    done = "done"
+    skipped_in_zone = "skipped_in_zone"
+
+
 class Completion(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     habit_id: int = Field(foreign_key="habit.id")
     date: date
     completed_at: Optional[datetime] = None
+    loops_done: int = Field(default=0)
+    loops_target: int = Field(default=1)
+    status: str = Field(default=CompletionStatus.pending.value)
 
 
 class HabitGroupRead(SQLModel):
@@ -92,6 +102,19 @@ class HabitRead(SQLModel):
 class CompletionRead(SQLModel):
     habit_id: int
     date: date
+    loops_done: int
+    loops_target: int
+    status: str
+
+    @classmethod
+    def from_row(cls, row: "Completion") -> "CompletionRead":
+        return cls(
+            habit_id=row.habit_id,
+            date=row.date,
+            loops_done=row.loops_done,
+            loops_target=row.loops_target,
+            status=row.status,
+        )
 
 
 class BoardResponse(SQLModel):
@@ -100,6 +123,7 @@ class BoardResponse(SQLModel):
     habits: list[HabitRead]
     completions: list[CompletionRead]
     settings: "AppSettingsRead"
+    day_run: Optional["DayRunRead"] = None
 
 
 class CreateSubGroupRequest(SQLModel):
@@ -206,7 +230,7 @@ class HabitSessionRead(SQLModel):
 
 class StartSessionRequest(SQLModel):
     habit_id: int
-    date: Optional[date] = None
+    session_date: Optional[date] = Field(default=None, alias="date")
     loop_index: int = 0
     source: SessionSource = SessionSource.timer
 
@@ -243,6 +267,10 @@ class UpdateDayRunRequest(SQLModel):
     mode: Optional[DayRunMode] = None
     loop_count: Optional[int] = None
     ended_at: Optional[datetime] = None
+
+
+class TapOutRequest(SQLModel):
+    tap_date: Optional[date] = Field(default=None, alias="date")
 
 
 class DayActivityResponse(SQLModel):

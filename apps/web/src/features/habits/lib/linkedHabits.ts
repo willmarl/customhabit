@@ -1,9 +1,10 @@
 import type { Completion, Habit } from "../types";
+import { getCellProgress, getCompletion, isCompletionDone } from "./completionUtils";
 
 export type LinkedCellState =
   | { kind: "default" }
   | { kind: "empty" }
-  | { kind: "linked"; checked: boolean };
+  | { kind: "linked"; progress: "none" | "partial" | "done" };
 
 export function getLinkedCellState(
   habit: Habit,
@@ -23,12 +24,27 @@ export function getLinkedCellState(
     return { kind: "empty" };
   }
 
-  const completionSet = new Set(
-    completions.map((c) => `${c.habit_id}:${c.date}`),
-  );
-  const allComplete = subHabits.every((h) =>
-    completionSet.has(`${h.id}:${date}`),
+  const progresses = subHabits.map((h) =>
+    getCellProgress(getCompletion(completions, h.id, date)),
   );
 
-  return { kind: "linked", checked: allComplete };
+  if (progresses.every((p) => p === "done")) {
+    return { kind: "linked", progress: "done" };
+  }
+  if (progresses.some((p) => p === "partial" || p === "done")) {
+    return { kind: "linked", progress: "partial" };
+  }
+  return { kind: "linked", progress: "none" };
 }
+
+export function isLinkedDone(
+  habit: Habit,
+  allHabits: Habit[],
+  completions: Completion[],
+  date: string,
+): boolean {
+  const state = getLinkedCellState(habit, allHabits, completions, date);
+  return state.kind === "linked" && state.progress === "done";
+}
+
+export { isCompletionDone, getCellProgress, getCompletion };

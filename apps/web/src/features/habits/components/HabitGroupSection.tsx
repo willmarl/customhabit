@@ -113,6 +113,8 @@ export default function HabitGroupSection({
         groupColorId={isCore ? undefined : group.color}
         habits={board.habits}
         lookbackDays={board.settings.lookback_days}
+        dayStartTime={board.settings.day_start_time}
+        subGroupNames={Object.fromEntries(board.sub_groups.map((g) => [g.id, g.name]))}
         completions={completions}
         subGroupColors={subGroupColors}
         onToggle={onToggle}
