@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${PORT:-1234}:${PORT:-8000}"
+    environment:
+      PORT: ${PORT:-8000}
+    volumes:
+      - ~/Downloads/test/:/app/foos
+    restart: unless-stopped
