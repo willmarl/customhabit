@@ -47,6 +47,7 @@ class Habit(SQLModel, table=True):
     linked_sub_group_id: Optional[int] = Field(default=None, foreign_key="habitgroup.id")
     duration_minutes: int = Field(default=60)
     once_per_day: bool = Field(default=False)
+    retired_at: Optional[datetime] = None
 
 
 DURATION_SUFFIX_RE = re.compile(r"\s+(\d+)m\s*$", re.IGNORECASE)
@@ -97,6 +98,7 @@ class HabitRead(SQLModel):
     linked_sub_group_id: Optional[int] = None
     duration_minutes: int
     once_per_day: bool
+    retired_at: Optional[datetime] = None
 
 
 class CompletionRead(SQLModel):
@@ -115,6 +117,15 @@ class CompletionRead(SQLModel):
             loops_target=row.loops_target,
             status=row.status,
         )
+
+
+class RetiredHabitRead(HabitRead):
+    group_name: str
+
+
+class RetiredHabitsResponse(SQLModel):
+    habits: list[RetiredHabitRead]
+    completions: list[CompletionRead]
 
 
 class BoardResponse(SQLModel):

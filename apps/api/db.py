@@ -109,6 +109,12 @@ def migrate_schema() -> None:
             "status",
             "ALTER TABLE completion ADD COLUMN status TEXT NOT NULL DEFAULT 'done'",
         )
+        _add_column_if_missing(
+            conn,
+            "habit",
+            "retired_at",
+            "ALTER TABLE habit ADD COLUMN retired_at TEXT",
+        )
 
 
 def migrate_habit_duration_suffixes() -> None:

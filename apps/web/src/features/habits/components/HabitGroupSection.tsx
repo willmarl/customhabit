@@ -42,7 +42,6 @@ export default function HabitGroupSection({
       content: (
         <ManageHabitsDialog
           groupId={group.id}
-          habits={board.habits}
           onClose={closeModal}
         />
       ),

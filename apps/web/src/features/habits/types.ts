@@ -30,6 +30,17 @@ export type Habit = {
   linked_sub_group_id: number | null;
   duration_minutes: number;
   once_per_day: boolean;
+  retired_at?: string | null;
+};
+
+export type RetiredHabit = Habit & {
+  group_name: string;
+  retired_at: string;
+};
+
+export type RetiredHabits = {
+  habits: RetiredHabit[];
+  completions: Completion[];
 };
 
 export type Completion = {

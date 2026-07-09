@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Archive, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ConfirmModal } from "@/components/modal/ConfirmModal";
+import { useModal } from "@/components/providers/ModalProvider";
 import { IconTooltipButton } from "@/components/ui/icon-tooltip";
 import type { Habit } from "../types";
-import { useDeleteHabit, useUpdateHabit } from "../hooks";
+import { useBoard, useDeleteHabit, useRetireHabit, useUpdateHabit } from "../hooks";
 
 type ManageHabitsDialogProps = {
   groupId: number;
-  habits: Habit[];
   onClose: () => void;
 };
 
@@ -18,7 +19,9 @@ function ManageHabitRow({ habit }: { habit: Habit }) {
   const [name, setName] = useState(habit.name);
   const [duration, setDuration] = useState(String(habit.duration_minutes));
   const [oncePerDay, setOncePerDay] = useState(habit.once_per_day);
+  const { openModal } = useModal();
   const { mutate: updateHabit } = useUpdateHabit();
+  const { mutateAsync: retireHabit } = useRetireHabit();
   const { mutate: deleteHabit } = useDeleteHabit();
 
   useEffect(() => {
@@ -56,6 +59,19 @@ function ManageHabitRow({ habit }: { habit: Habit }) {
     }
   };
 
+  const handleRetire = () => {
+    openModal({
+      title: `Retire "${habit.name}"?`,
+      content: (
+        <ConfirmModal
+          message={`"${habit.name}" will be hidden from your active board. Completion history is kept — you can restore it later from Retired habits.`}
+          buttonMessage="Retire"
+          onConfirm={() => retireHabit(habit.id)}
+        />
+      ),
+    });
+  };
+
   return (
     <li className="space-y-2 rounded-md border border-border/60 px-3 py-2">
       <div className="flex items-center gap-2">
@@ -72,6 +88,16 @@ function ManageHabitRow({ habit }: { habit: Habit }) {
           className="h-8 flex-1 border-0 bg-transparent px-1 text-sm shadow-none focus-visible:ring-0"
           aria-label={`Rename ${habit.name}`}
         />
+        <IconTooltipButton
+          variant="ghost"
+          size="icon-sm"
+          className="shrink-0 text-muted-foreground hover:text-foreground"
+          tooltip={`Retire ${habit.name}`}
+          onClick={handleRetire}
+          aria-label={`Retire ${habit.name}`}
+        >
+          <Archive className="size-3.5" />
+        </IconTooltipButton>
         <IconTooltipButton
           variant="ghost"
           size="icon-sm"
@@ -112,18 +138,18 @@ function ManageHabitRow({ habit }: { habit: Habit }) {
 
 export default function ManageHabitsDialog({
   groupId,
-  habits,
   onClose,
 }: ManageHabitsDialogProps) {
-  const editable = habits
+  const { data: board } = useBoard();
+  const editable = (board?.habits ?? [])
     .filter((h) => h.group_id === groupId && h.linked_sub_group_id == null)
     .sort((a, b) => a.sort_order - b.sort_order);
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Rename, set duration, or remove habits. &quot;Once per day&quot; is for fixed
-        sessions like exercise — only one completion per day even in loop mode.
+        Rename, set duration, retire, or delete habits. Retiring keeps history (e.g. finished
+        bootcamp). Delete permanently removes a habit and its completions.
       </p>
       <ul className="space-y-2">
         {editable.length === 0 && (

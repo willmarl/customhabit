@@ -22,6 +22,8 @@ from .schemas import (
     HabitGroupType,
     HabitRead,
     ReorderHabitsRequest,
+    RetiredHabitRead,
+    RetiredHabitsResponse,
     ToggleCompletionRequest,
     UpdateGroupRequest,
     UpdateHabitRequest,
@@ -42,7 +44,7 @@ class HabitService:
 
     def _next_sort_order(self, group_id: int) -> int:
         habits = self.session.exec(
-            select(Habit).where(Habit.group_id == group_id)
+            select(Habit).where(Habit.group_id == group_id).where(Habit.retired_at.is_(None))
         ).all()
         if not habits:
             return 0
@@ -61,6 +63,21 @@ class HabitService:
             return
         self.session.exec(delete(Completion).where(Completion.habit_id.in_(habit_ids)))
 
+    def _get_habit_or_404(self, habit_id: int) -> Habit:
+        habit = self.session.get(Habit, habit_id)
+        if not habit:
+            raise HTTPException(status_code=404, detail="Habit not found")
+        return habit
+
+    def _ensure_editable_habit(self, habit: Habit) -> None:
+        if habit.linked_sub_group_id is not None:
+            raise HTTPException(
+                status_code=403,
+                detail="Cannot modify linked core row; manage the sub-category instead",
+            )
+        if habit.retired_at is not None:
+            raise HTTPException(status_code=403, detail="Habit is retired")
+
     def get_board(self) -> BoardResponse:
         settings = SettingsService(self.session).get()
         core = self._get_core_group()
@@ -76,6 +93,7 @@ class HabitService:
             self.session.exec(
                 select(Habit)
                 .where(Habit.group_id.in_(group_ids))
+                .where(Habit.retired_at.is_(None))
                 .order_by(Habit.sort_order)
             ).all()
         )
@@ -233,9 +251,8 @@ class HabitService:
         return HabitRead.model_validate(habit)
 
     def update_habit(self, habit_id: int, data: UpdateHabitRequest) -> HabitRead:
-        habit = self.session.get(Habit, habit_id)
-        if not habit:
-            raise HTTPException(status_code=404, detail="Habit not found")
+        habit = self._get_habit_or_404(habit_id)
+        self._ensure_editable_habit(habit)
 
         if habit.linked_sub_group_id is not None and data.name is not None:
             sub_group = self.session.get(HabitGroup, habit.linked_sub_group_id)
@@ -258,31 +275,93 @@ class HabitService:
         return HabitRead.model_validate(habit)
 
     def delete_habit(self, habit_id: int) -> None:
-        habit = self.session.get(Habit, habit_id)
-        if not habit:
-            raise HTTPException(status_code=404, detail="Habit not found")
-        if habit.linked_sub_group_id is not None:
-            raise HTTPException(
-                status_code=403,
-                detail="Cannot delete linked core row; delete the sub-category instead",
-            )
+        habit = self._get_habit_or_404(habit_id)
+        self._ensure_editable_habit(habit)
 
         self._delete_habit_completions([habit_id])
         self.session.delete(habit)
         self.session.commit()
 
+    def retire_habit(self, habit_id: int) -> BoardResponse:
+        habit = self._get_habit_or_404(habit_id)
+        self._ensure_editable_habit(habit)
+        if habit.retired_at is not None:
+            raise HTTPException(status_code=400, detail="Habit is already retired")
+
+        habit.retired_at = datetime.now()
+        self.session.add(habit)
+        self.session.commit()
+        return self.get_board()
+
+    def restore_habit(self, habit_id: int) -> BoardResponse:
+        habit = self._get_habit_or_404(habit_id)
+        if habit.retired_at is None:
+            raise HTTPException(status_code=400, detail="Habit is not retired")
+
+        habit.retired_at = None
+        habit.sort_order = self._next_sort_order(habit.group_id)
+        self.session.add(habit)
+        self.session.commit()
+        return self.get_board()
+
+    def get_retired_habits(self) -> RetiredHabitsResponse:
+        settings = SettingsService(self.session).get()
+        groups = list(self.session.exec(select(HabitGroup)).all())
+        group_names = {g.id: g.name for g in groups}
+
+        retired = list(
+            self.session.exec(
+                select(Habit)
+                .where(Habit.retired_at.isnot(None))
+                .order_by(Habit.retired_at.desc())
+            ).all()
+        )
+
+        today = resolve_habit_date(day_start=settings.day_start_time)
+        start = today - timedelta(days=settings.lookback_days - 1)
+        habit_ids = [h.id for h in retired if h.id is not None]
+        completions: list[Completion] = []
+        if habit_ids:
+            completions = list(
+                self.session.exec(
+                    select(Completion)
+                    .where(Completion.habit_id.in_(habit_ids))
+                    .where(Completion.date >= start)
+                    .where(Completion.date <= today)
+                ).all()
+            )
+
+        return RetiredHabitsResponse(
+            habits=[
+                RetiredHabitRead(
+                    id=h.id,
+                    group_id=h.group_id,
+                    name=h.name,
+                    sort_order=h.sort_order,
+                    linked_sub_group_id=h.linked_sub_group_id,
+                    duration_minutes=h.duration_minutes,
+                    once_per_day=h.once_per_day,
+                    retired_at=h.retired_at,
+                    group_name=group_names.get(h.group_id, "Unknown"),
+                )
+                for h in retired
+                if h.id is not None
+            ],
+            completions=[CompletionRead.from_row(c) for c in completions],
+        )
+
     def reorder_habits(self, data: ReorderHabitsRequest) -> None:
         for item in data.items:
             habit = self.session.get(Habit, item.id)
-            if habit:
+            if habit and habit.retired_at is None:
                 habit.sort_order = item.sort_order
                 self.session.add(habit)
         self.session.commit()
 
     def toggle_completion(self, data: ToggleCompletionRequest) -> CompletionRead | None:
-        habit = self.session.get(Habit, data.habit_id)
-        if not habit:
-            raise HTTPException(status_code=404, detail="Habit not found")
+        habit = self._get_habit_or_404(data.habit_id)
+        if habit.retired_at is not None:
+            raise HTTPException(status_code=403, detail="Habit is retired")
 
         if habit.linked_sub_group_id is not None:
             raise HTTPException(

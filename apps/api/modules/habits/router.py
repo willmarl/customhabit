@@ -15,6 +15,7 @@ from .schemas import (
     HabitRead,
     HabitSessionRead,
     ReorderHabitsRequest,
+    RetiredHabitsResponse,
     StartSessionRequest,
     StopSessionRequest,
     TapOutRequest,
@@ -148,7 +149,28 @@ async def tap_out_day(
     return service.tap_out(data.tap_date)
 
 
+@router.get("/retired", response_model=RetiredHabitsResponse)
+async def get_retired_habits(service: HabitService = Depends(get_habit_service)):
+    return service.get_retired_habits()
+
+
 # Parameterized habit routes last — otherwise "/day-run" matches habit_id
+@router.post("/{habit_id}/retire", response_model=BoardResponse)
+async def retire_habit(
+    habit_id: int,
+    service: HabitService = Depends(get_habit_service),
+):
+    return service.retire_habit(habit_id)
+
+
+@router.post("/{habit_id}/restore", response_model=BoardResponse)
+async def restore_habit(
+    habit_id: int,
+    service: HabitService = Depends(get_habit_service),
+):
+    return service.restore_habit(habit_id)
+
+
 @router.patch("/{habit_id}", response_model=HabitRead)
 async def update_habit(
     habit_id: int,

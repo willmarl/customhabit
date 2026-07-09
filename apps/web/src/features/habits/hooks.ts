@@ -6,7 +6,10 @@ import {
   deleteSubGroup,
   fetchBoard,
   fetchDayActivity,
+  fetchRetiredHabits,
   reorderHabits,
+  restoreHabit,
+  retireHabit,
   startSession,
   stopSession,
   tapOutDay,
@@ -30,6 +33,7 @@ import type {
 import { getHabitDate } from "@/lib/dates";
 
 const BOARD_KEY = ["habits", "board"];
+const RETIRED_KEY = ["habits", "retired"];
 const today = () => getHabitDate();
 const activityKey = (date?: string) => ["habits", "activity", date ?? today()];
 
@@ -149,6 +153,31 @@ export const useTapOut = () => {
     mutationFn: (data: TapOutRequest) => tapOutDay(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BOARD_KEY });
+    },
+  });
+};
+
+export const useRetiredHabits = () =>
+  useQuery({ queryKey: RETIRED_KEY, queryFn: fetchRetiredHabits });
+
+export const useRetireHabit = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => retireHabit(id),
+    onSuccess: (board) => {
+      queryClient.setQueryData(BOARD_KEY, board);
+      queryClient.invalidateQueries({ queryKey: RETIRED_KEY });
+    },
+  });
+};
+
+export const useRestoreHabit = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => restoreHabit(id),
+    onSuccess: (board) => {
+      queryClient.setQueryData(BOARD_KEY, board);
+      queryClient.invalidateQueries({ queryKey: RETIRED_KEY });
     },
   });
 };

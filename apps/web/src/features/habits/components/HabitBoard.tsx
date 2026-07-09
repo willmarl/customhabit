@@ -14,6 +14,7 @@ import CreateSubCategoryDialog from "./CreateSubCategoryDialog";
 import DayEstimateBar from "./DayEstimateBar";
 import DayModeBar from "./DayModeBar";
 import LoopIterationBar from "./LoopIterationBar";
+import RetiredHabitsPanel from "./RetiredHabitsPanel";
 import { useLoopModeUi } from "../hooks/useLoopModeUi";
 
 export default function HabitBoard() {
@@ -167,6 +168,11 @@ export default function HabitBoard() {
           </>
         )}
       </div>
+
+      <RetiredHabitsPanel
+        lookbackDays={board.settings.lookback_days}
+        dayStartTime={board.settings.day_start_time}
+      />
     </div>
   );
 }

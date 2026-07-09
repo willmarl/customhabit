@@ -10,6 +10,7 @@ import type {
   HabitGroup,
   HabitSession,
   ReorderHabitItem,
+  RetiredHabits,
   StartSessionRequest,
   StopSessionRequest,
   TapOutRequest,
@@ -73,3 +74,12 @@ export const updateDayRun = (data: UpdateDayRunRequest) =>
 
 export const tapOutDay = (data: TapOutRequest = {}) =>
   kyClient.post("habits/day-run/tap-out", { json: data }).json<DayRun>();
+
+export const fetchRetiredHabits = () =>
+  kyClient.get("habits/retired").json<RetiredHabits>();
+
+export const retireHabit = (id: number) =>
+  kyClient.post(`habits/${id}/retire`).json<Board>();
+
+export const restoreHabit = (id: number) =>
+  kyClient.post(`habits/${id}/restore`).json<Board>();
