@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { Completion, Habit } from "../types";
 import { getLinkedCellState } from "../lib/linkedHabits";
 import { getSubCategoryColor } from "../lib/subCategoryColors";
+import { formatDurationMinutes } from "../lib/dayEstimate";
 import TallyCell from "./TallyCell";
 
 type HabitRowProps = {
@@ -90,15 +91,42 @@ export default function HabitRow({
             </button>
           </IconTooltipWrap>
         ) : (
-          <span className="truncate text-sm">{habit.name}</span>
+          <>
+            <span
+              className={cn(
+                "truncate text-sm",
+                habit.once_per_day &&
+                  "font-semibold text-sky-700 dark:text-sky-400",
+              )}
+            >
+              {habit.name}
+            </span>
+            {habit.once_per_day ? (
+              <span
+                className="shrink-0 rounded bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700 dark:bg-sky-500/20 dark:text-sky-400"
+                title="Once per day — fixed session"
+              >
+                once daily
+              </span>
+            ) : null}
+            <span
+              className={cn(
+                "shrink-0 text-xs tabular-nums text-muted-foreground",
+                habit.once_per_day && "font-medium text-sky-700/80 dark:text-sky-400/80",
+              )}
+              title={`${habit.duration_minutes} minutes`}
+            >
+              {formatDurationMinutes(habit.duration_minutes)}
+            </span>
+          </>
         )}
         <IconTooltipButton
           variant="ghost"
           size="icon-xs"
           className="shrink-0 text-muted-foreground"
-          tooltip="Rename habit"
+          tooltip="Edit habit"
           onClick={() => onRename(habit)}
-          aria-label={`Rename ${habit.name}`}
+          aria-label={`Edit ${habit.name}`}
         >
           <Pencil className="size-3" />
         </IconTooltipButton>

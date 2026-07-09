@@ -2,23 +2,97 @@ from sqlalchemy import text
 from sqlmodel import SQLModel, Session, create_engine, select
 
 from modules.settings.schemas import AppSettings
-from modules.habits.schemas import HabitGroup, HabitGroupType, Habit, Completion
+from modules.habits.schemas import (
+    HabitGroup,
+    HabitGroupType,
+    Habit,
+    parse_duration_suffix,
+)
 
 DATABASE_URL = "sqlite:///./database.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 
+def _add_column_if_missing(conn, table: str, column: str, ddl: str) -> None:
+    cols = conn.execute(text(f"PRAGMA table_info({table})")).fetchall()
+    col_names = {row[1] for row in cols}
+    if column not in col_names:
+        conn.execute(text(ddl))
+        conn.commit()
+
+
 def migrate_schema() -> None:
     with engine.connect() as conn:
-        cols = conn.execute(text("PRAGMA table_info(habitgroup)")).fetchall()
-        col_names = {row[1] for row in cols}
-        if "color" not in col_names:
-            conn.execute(
-                text(
-                    "ALTER TABLE habitgroup ADD COLUMN color TEXT NOT NULL DEFAULT 'orange'"
-                )
-            )
-            conn.commit()
+        _add_column_if_missing(
+            conn,
+            "habitgroup",
+            "color",
+            "ALTER TABLE habitgroup ADD COLUMN color TEXT NOT NULL DEFAULT 'orange'",
+        )
+        _add_column_if_missing(
+            conn,
+            "habit",
+            "duration_minutes",
+            "ALTER TABLE habit ADD COLUMN duration_minutes INTEGER NOT NULL DEFAULT 60",
+        )
+        _add_column_if_missing(
+            conn,
+            "habit",
+            "once_per_day",
+            "ALTER TABLE habit ADD COLUMN once_per_day INTEGER NOT NULL DEFAULT 0",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "break_minutes",
+            "ALTER TABLE appsettings ADD COLUMN break_minutes INTEGER NOT NULL DEFAULT 5",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "wake_time",
+            "ALTER TABLE appsettings ADD COLUMN wake_time TEXT NOT NULL DEFAULT '07:00'",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "bed_time",
+            "ALTER TABLE appsettings ADD COLUMN bed_time TEXT NOT NULL DEFAULT '23:00'",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "default_habit_minutes",
+            "ALTER TABLE appsettings ADD COLUMN default_habit_minutes INTEGER NOT NULL DEFAULT 60",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "playlist_minutes",
+            "ALTER TABLE appsettings ADD COLUMN playlist_minutes INTEGER NOT NULL DEFAULT 53",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "loop_exempt_below_minutes",
+            "ALTER TABLE appsettings ADD COLUMN loop_exempt_below_minutes INTEGER NOT NULL DEFAULT 60",
+        )
+
+
+def migrate_habit_duration_suffixes() -> None:
+    with Session(engine) as session:
+        habits = list(session.exec(select(Habit)).all())
+        changed = False
+        for habit in habits:
+            stripped, minutes = parse_duration_suffix(habit.name)
+            if minutes is None:
+                continue
+            habit.name = stripped
+            habit.duration_minutes = minutes
+            session.add(habit)
+            changed = True
+        if changed:
+            session.commit()
 
 
 def seed_defaults() -> None:
@@ -31,7 +105,7 @@ def seed_defaults() -> None:
 
         settings = session.get(AppSettings, 1)
         if not settings:
-            session.add(AppSettings(id=1, lookback_days=7))
+            session.add(AppSettings(id=1))
 
         session.commit()
 
@@ -39,6 +113,7 @@ def seed_defaults() -> None:
 SQLModel.metadata.create_all(engine)
 migrate_schema()
 seed_defaults()
+migrate_habit_duration_suffixes()
 
 
 def get_session():

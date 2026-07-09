@@ -8,6 +8,7 @@ import { useBoard, useToggleCompletion } from "../hooks";
 import type { Completion, ToggleCompletionRequest } from "../types";
 import HabitGroupSection from "./HabitGroupSection";
 import CreateSubCategoryDialog from "./CreateSubCategoryDialog";
+import DayEstimateBar from "./DayEstimateBar";
 
 function toggleCompletionReducer(
   state: Completion[],
@@ -107,6 +108,8 @@ export default function HabitBoard() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-10 px-6 py-8 text-left">
+      <DayEstimateBar board={board} />
+
       <HabitGroupSection
         group={board.core_group}
         board={board}

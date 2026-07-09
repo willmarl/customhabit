@@ -7,6 +7,7 @@ from modules.settings.service import SettingsService
 from .schemas import (
     BoardResponse,
     is_valid_sub_color,
+    MIN_HABIT_MINUTES,
     Completion,
     CompletionRead,
     CreateHabitRequest,
@@ -186,6 +187,13 @@ class HabitService:
         self.session.commit()
         return self.get_board()
 
+    def _validate_duration(self, minutes: int) -> None:
+        if minutes < MIN_HABIT_MINUTES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"duration_minutes must be at least {MIN_HABIT_MINUTES}",
+            )
+
     def create_habit(self, data: CreateHabitRequest) -> HabitRead:
         group = self.session.get(HabitGroup, data.group_id)
         if not group:
@@ -195,10 +203,20 @@ class HabitService:
         if not name:
             raise HTTPException(status_code=400, detail="Name is required")
 
+        settings = SettingsService(self.session).get()
+        duration = (
+            data.duration_minutes
+            if data.duration_minutes is not None
+            else settings.default_habit_minutes
+        )
+        self._validate_duration(duration)
+
         habit = Habit(
             group_id=data.group_id,
             name=name,
             sort_order=self._next_sort_order(data.group_id),
+            duration_minutes=duration,
+            once_per_day=data.once_per_day or False,
         )
         self.session.add(habit)
         self.session.commit()
@@ -219,6 +237,9 @@ class HabitService:
         for key, value in data.model_dump(exclude_unset=True).items():
             if key == "name" and value is not None:
                 setattr(habit, key, value.strip())
+            elif key == "duration_minutes" and value is not None:
+                self._validate_duration(value)
+                setattr(habit, key, value)
             else:
                 setattr(habit, key, value)
 
