@@ -16,24 +16,29 @@ import {
 import { getVisibleDates } from "@/lib/dates";
 import type { Completion, Habit, ToggleCompletionRequest } from "../types";
 import { useReorderHabits } from "../hooks";
+import AddHabitInline from "./AddHabitInline";
 import DateGridHeader from "./DateGridHeader";
 import HabitRow from "./HabitRow";
 import RenameHabitDialog from "./RenameHabitDialog";
 
 type HabitTableProps = {
   groupId: number;
+  groupColorId?: string;
   habits: Habit[];
   lookbackDays: number;
   completions: Completion[];
+  subGroupColors: Record<number, string>;
   onToggle: (data: ToggleCompletionRequest) => void;
   onLinkedClick?: (subGroupId: number) => void;
 };
 
 export default function HabitTable({
   groupId,
+  groupColorId,
   habits,
   lookbackDays,
   completions,
+  subGroupColors,
   onToggle,
   onLinkedClick,
 }: HabitTableProps) {
@@ -72,12 +77,6 @@ export default function HabitTable({
     reorder(reordered.map((h, i) => ({ id: h.id, sort_order: i })));
   };
 
-  if (sorted.length === 0) {
-    return (
-      <p className="py-6 text-sm text-muted-foreground">No habits yet.</p>
-    );
-  }
-
   return (
     <>
       <div className="overflow-x-auto">
@@ -85,33 +84,40 @@ export default function HabitTable({
           <div className="flex items-end justify-end gap-0.5 pb-2 pl-[calc(1rem+1.5rem+1.5rem+0.375rem)]">
             <DateGridHeader dates={dates} />
           </div>
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={sorted.map((h) => h.id)}
-              strategy={verticalListSortingStrategy}
+
+          {sorted.length > 0 && (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
             >
-              {sorted.map((habit, index) => (
-                <HabitRow
-                  key={habit.id}
-                  habit={habit}
-                  index={index}
-                  dates={dates}
-                  allHabits={habits}
-                  completions={completions}
-                  completionSet={completionSet}
-                  onToggle={(habitId, date) =>
-                    onToggle({ habit_id: habitId, date })
-                  }
-                  onRename={setRenaming}
-                  onLinkedClick={onLinkedClick}
-                />
-              ))}
-            </SortableContext>
-          </DndContext>
+              <SortableContext
+                items={sorted.map((h) => h.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {sorted.map((habit, index) => (
+                  <HabitRow
+                    key={habit.id}
+                    habit={habit}
+                    index={index}
+                    dates={dates}
+                    allHabits={habits}
+                    completions={completions}
+                    completionSet={completionSet}
+                    subGroupColors={subGroupColors}
+                    groupColorId={groupColorId}
+                    onToggle={(habitId, date) =>
+                      onToggle({ habit_id: habitId, date })
+                    }
+                    onRename={setRenaming}
+                    onLinkedClick={onLinkedClick}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          )}
+
+          <AddHabitInline groupId={groupId} dateColumnCount={dates.length} />
         </div>
       </div>
 

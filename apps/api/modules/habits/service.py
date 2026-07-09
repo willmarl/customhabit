@@ -6,6 +6,7 @@ from sqlmodel import Session, select, delete
 from modules.settings.service import SettingsService
 from .schemas import (
     BoardResponse,
+    is_valid_sub_color,
     Completion,
     CompletionRead,
     CreateHabitRequest,
@@ -137,7 +138,12 @@ class HabitService:
         if data.name is not None and group.type == HabitGroupType.core:
             raise HTTPException(status_code=400, detail="Cannot rename core group")
 
-        old_name = group.name
+        if data.color is not None:
+            if group.type != HabitGroupType.sub:
+                raise HTTPException(status_code=400, detail="Only sub-categories can have colors")
+            if not is_valid_sub_color(data.color):
+                raise HTTPException(status_code=400, detail="Invalid color")
+
         for key, value in data.model_dump(exclude_unset=True).items():
             setattr(group, key, value)
         self.session.add(group)

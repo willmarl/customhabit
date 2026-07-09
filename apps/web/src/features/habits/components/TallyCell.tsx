@@ -1,17 +1,24 @@
 import { cn } from "@/lib/utils";
+import type { SubCategoryColor } from "../lib/subCategoryColors";
+import { getCoreHabitColor } from "../lib/subCategoryColors";
 
 type TallyCellProps = {
   checked: boolean;
   variant?: "default" | "empty" | "linked";
+  accentColor?: SubCategoryColor;
+  accentTone?: "full" | "linked";
   onToggle?: () => void;
 };
 
 export default function TallyCell({
   checked,
   variant = "default",
+  accentColor,
+  accentTone = "full",
   onToggle,
 }: TallyCellProps) {
   const isInteractive = variant === "default" && onToggle != null;
+  const color = accentColor ?? (variant === "default" ? getCoreHabitColor() : undefined);
 
   if (variant === "empty") {
     return (
@@ -26,25 +33,30 @@ export default function TallyCell({
     );
   }
 
+  const checkedClass =
+    accentTone === "linked"
+      ? color?.tallyCheckedLinked
+      : color?.tallyChecked;
+
+  const checkedStyle =
+    accentTone === "linked"
+      ? color?.styles?.tallyCheckedLinked
+      : color?.styles?.tallyChecked;
+
   return (
     <button
       type="button"
       onClick={isInteractive ? onToggle : undefined}
       disabled={!isInteractive}
+      style={checked ? checkedStyle : undefined}
       className={cn(
         "size-7 shrink-0 rounded-sm border transition-colors duration-100",
-        isInteractive &&
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/60",
+        isInteractive && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
         !isInteractive && "cursor-default",
-        checked
-          ? "border-violet-300 bg-violet-400 dark:border-violet-500 dark:bg-violet-500"
-          : "border-border/70 bg-background",
-        isInteractive &&
-          !checked &&
-          "hover:border-violet-300 hover:bg-violet-100 dark:hover:border-violet-600 dark:hover:bg-violet-950/50",
-        isInteractive &&
-          checked &&
-          "hover:border-violet-400 hover:bg-violet-500 dark:hover:bg-violet-400",
+        checked && checkedClass,
+        !checked && "border-border/70 bg-background",
+        isInteractive && !checked && color?.tallyHover,
+        isInteractive && checked && color?.tallyHoverChecked,
       )}
       aria-label={
         variant === "linked"

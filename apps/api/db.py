@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlmodel import SQLModel, Session, create_engine, select
 
 from modules.settings.schemas import AppSettings
@@ -5,6 +6,19 @@ from modules.habits.schemas import HabitGroup, HabitGroupType, Habit, Completion
 
 DATABASE_URL = "sqlite:///./database.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+
+
+def migrate_schema() -> None:
+    with engine.connect() as conn:
+        cols = conn.execute(text("PRAGMA table_info(habitgroup)")).fetchall()
+        col_names = {row[1] for row in cols}
+        if "color" not in col_names:
+            conn.execute(
+                text(
+                    "ALTER TABLE habitgroup ADD COLUMN color TEXT NOT NULL DEFAULT 'orange'"
+                )
+            )
+            conn.commit()
 
 
 def seed_defaults() -> None:
@@ -23,6 +37,7 @@ def seed_defaults() -> None:
 
 
 SQLModel.metadata.create_all(engine)
+migrate_schema()
 seed_defaults()
 
 

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { IconTooltipWrap } from "@/components/ui/icon-tooltip";
 
 export default function Header() {
   return (
@@ -10,12 +11,14 @@ export default function Header() {
         >
           Custom Habit
         </Link>
-        <Link
-          to="/settings"
-          className="text-sm font-medium text-muted-foreground hover:text-foreground"
-        >
-          Settings
-        </Link>
+        <IconTooltipWrap tooltip="Settings">
+          <Link
+            to="/settings"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            Settings
+          </Link>
+        </IconTooltipWrap>
       </div>
     </header>
   );

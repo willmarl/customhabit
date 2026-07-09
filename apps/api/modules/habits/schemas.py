@@ -1,5 +1,6 @@
 from datetime import date
 from enum import Enum
+import re
 from typing import Optional
 
 from sqlmodel import SQLModel, Field
@@ -16,6 +17,18 @@ class HabitGroup(SQLModel, table=True):
     name: str = "Core"
     notes: str = ""
     sort_order: int = 0
+    color: str = Field(default="orange")
+
+
+ALLOWED_SUB_COLORS = frozenset(
+    {"orange", "green", "blue", "violet", "rose", "teal", "amber", "slate"}
+)
+
+HEX_COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
+
+
+def is_valid_sub_color(color: str) -> bool:
+    return color in ALLOWED_SUB_COLORS or bool(HEX_COLOR_RE.match(color))
 
 
 class Habit(SQLModel, table=True):
@@ -38,6 +51,7 @@ class HabitGroupRead(SQLModel):
     name: str
     notes: str
     sort_order: int
+    color: str
 
 
 class HabitRead(SQLModel):
@@ -69,6 +83,7 @@ class UpdateGroupRequest(SQLModel):
     name: Optional[str] = None
     notes: Optional[str] = None
     sort_order: Optional[int] = None
+    color: Optional[str] = None
 
 
 class CreateHabitRequest(SQLModel):

@@ -1,7 +1,7 @@
-import { useCallback, useOptimistic } from "react";
+import { useCallback, useMemo, useOptimistic } from "react";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { IconTooltipButton } from "@/components/ui/icon-tooltip";
 import { useModal } from "@/components/providers/ModalProvider";
 import { useBoard, useToggleCompletion } from "../hooks";
 import type { Completion, ToggleCompletionRequest } from "../types";
@@ -41,6 +41,11 @@ export default function HabitBoard() {
     [addOptimisticCompletion, toggleCompletion],
   );
 
+  const subGroupColors = useMemo(
+    () => Object.fromEntries(board?.sub_groups.map((g) => [g.id, g.color]) ?? []),
+    [board?.sub_groups],
+  );
+
   const scrollToSub = (subGroupId: number) => {
     document.getElementById(`sub-${subGroupId}`)?.scrollIntoView({
       behavior: "smooth",
@@ -77,6 +82,7 @@ export default function HabitBoard() {
         group={board.core_group}
         board={board}
         completions={optimisticCompletions}
+        subGroupColors={subGroupColors}
         onToggle={handleToggle}
         isCore
         onLinkedClick={scrollToSub}
@@ -89,10 +95,15 @@ export default function HabitBoard() {
           <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
             Sub-categories
           </h2>
-          <Button variant="outline" size="sm" onClick={handleAddSub}>
+          <IconTooltipButton
+            variant="outline"
+            size="sm"
+            tooltip="Add sub-category"
+            onClick={handleAddSub}
+          >
             <Plus className="size-3.5" />
             Add sub-category
-          </Button>
+          </IconTooltipButton>
         </div>
 
         {board.sub_groups.length === 0 ? (
@@ -107,6 +118,7 @@ export default function HabitBoard() {
                 group={group}
                 board={board}
                 completions={optimisticCompletions}
+                subGroupColors={subGroupColors}
                 onToggle={handleToggle}
               />
             </div>

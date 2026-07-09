@@ -10,6 +10,7 @@ export type HabitGroup = {
   name: string;
   notes: string;
   sort_order: number;
+  color: string;
 };
 
 export type Habit = {
@@ -34,7 +35,7 @@ export type Board = {
 };
 
 export type CreateSubGroupRequest = { name: string };
-export type UpdateGroupRequest = { name?: string; notes?: string };
+export type UpdateGroupRequest = { name?: string; notes?: string; color?: string };
 export type CreateHabitRequest = { group_id: number; name: string };
 export type UpdateHabitRequest = { name?: string };
 export type ReorderHabitItem = { id: number; sort_order: number };
