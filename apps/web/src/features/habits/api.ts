@@ -3,10 +3,16 @@ import type {
   Board,
   CreateHabitRequest,
   CreateSubGroupRequest,
+  DayActivity,
+  DayRun,
   Habit,
   HabitGroup,
+  HabitSession,
   ReorderHabitItem,
+  StartSessionRequest,
+  StopSessionRequest,
   ToggleCompletionRequest,
+  UpdateDayRunRequest,
   UpdateGroupRequest,
   UpdateHabitRequest,
 } from "./types";
@@ -36,3 +42,27 @@ export const reorderHabits = (items: ReorderHabitItem[]) =>
 
 export const toggleCompletion = (data: ToggleCompletionRequest) =>
   kyClient.post("habits/completions/toggle", { json: data }).json<{ habit_id: number; date: string } | null>();
+
+export const fetchDayActivity = (date?: string) =>
+  kyClient
+    .get("habits/sessions/activity", { searchParams: date ? { date } : {} })
+    .json<DayActivity>();
+
+export const fetchSessions = (date?: string) =>
+  kyClient
+    .get("habits/sessions", { searchParams: date ? { date } : {} })
+    .json<HabitSession[]>();
+
+export const startSession = (data: StartSessionRequest) =>
+  kyClient.post("habits/sessions/start", { json: data }).json<HabitSession>();
+
+export const stopSession = (data: StopSessionRequest) =>
+  kyClient.post("habits/sessions/stop", { json: data }).json<HabitSession>();
+
+export const fetchDayRun = (date?: string) =>
+  kyClient
+    .get("habits/day-run", { searchParams: date ? { date } : {} })
+    .json<DayRun | null>();
+
+export const updateDayRun = (data: UpdateDayRunRequest) =>
+  kyClient.patch("habits/day-run", { json: data }).json<DayRun>();

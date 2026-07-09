@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 import re
 from typing import Optional
@@ -67,6 +67,7 @@ class Completion(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     habit_id: int = Field(foreign_key="habit.id")
     date: date
+    completed_at: Optional[datetime] = None
 
 
 class HabitGroupRead(SQLModel):
@@ -137,6 +138,118 @@ class ReorderHabitsRequest(SQLModel):
 class ToggleCompletionRequest(SQLModel):
     habit_id: int
     date: date
+
+
+class SessionSource(str, Enum):
+    manual = "manual"
+    timer = "timer"
+    toggle = "toggle"
+
+
+class DayRunStatus(str, Enum):
+    active = "active"
+    completed = "completed"
+    tap_out = "tap_out"
+
+
+class DayRunMode(str, Enum):
+    normal = "normal"
+    loop_30 = "loop_30"
+    in_zone = "in_zone"
+
+
+class HabitSession(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    habit_id: int = Field(foreign_key="habit.id")
+    session_date: date = Field(index=True)
+    started_at: datetime
+    ended_at: Optional[datetime] = None
+    duration_seconds: Optional[int] = None
+    loop_index: int = Field(default=0)
+    source: str = Field(default=SessionSource.timer.value)
+    completion_id: Optional[int] = Field(default=None, foreign_key="completion.id")
+
+
+class DayRun(SQLModel, table=True):
+    run_date: date = Field(primary_key=True)
+    started_at: Optional[datetime] = None
+    ended_at: Optional[datetime] = None
+    tap_out_at: Optional[datetime] = None
+    status: str = Field(default=DayRunStatus.active.value)
+    mode: str = Field(default=DayRunMode.normal.value)
+    loop_count: int = Field(default=2)
+
+
+class HabitSessionRead(SQLModel):
+    id: int
+    habit_id: int
+    date: date
+    started_at: datetime
+    ended_at: Optional[datetime] = None
+    duration_seconds: Optional[int] = None
+    loop_index: int
+    source: str
+
+    @classmethod
+    def from_row(cls, row: "HabitSession") -> "HabitSessionRead":
+        return cls(
+            id=row.id,
+            habit_id=row.habit_id,
+            date=row.session_date,
+            started_at=row.started_at,
+            ended_at=row.ended_at,
+            duration_seconds=row.duration_seconds,
+            loop_index=row.loop_index,
+            source=row.source,
+        )
+
+
+class StartSessionRequest(SQLModel):
+    habit_id: int
+    date: Optional[date] = None
+    loop_index: int = 0
+    source: SessionSource = SessionSource.timer
+
+
+class StopSessionRequest(SQLModel):
+    session_id: int
+
+
+class DayRunRead(SQLModel):
+    date: date
+    started_at: Optional[datetime] = None
+    ended_at: Optional[datetime] = None
+    tap_out_at: Optional[datetime] = None
+    status: str
+    mode: str
+    loop_count: int
+
+    @classmethod
+    def from_row(cls, row: "DayRun") -> "DayRunRead":
+        return cls(
+            date=row.run_date,
+            started_at=row.started_at,
+            ended_at=row.ended_at,
+            tap_out_at=row.tap_out_at,
+            status=row.status,
+            mode=row.mode,
+            loop_count=row.loop_count,
+        )
+
+
+class UpdateDayRunRequest(SQLModel):
+    date: date
+    status: Optional[DayRunStatus] = None
+    mode: Optional[DayRunMode] = None
+    loop_count: Optional[int] = None
+    ended_at: Optional[datetime] = None
+
+
+class DayActivityResponse(SQLModel):
+    day_run: Optional[DayRunRead] = None
+    sessions: list[HabitSessionRead]
+    active_session: Optional[HabitSessionRead] = None
+    break_seconds: list[int]
 
 
 from modules.settings.schemas import AppSettingsRead  # noqa: E402

@@ -5,21 +5,31 @@ import {
   deleteHabit,
   deleteSubGroup,
   fetchBoard,
+  fetchDayActivity,
   reorderHabits,
+  startSession,
+  stopSession,
   toggleCompletion,
   updateGroup,
+  updateDayRun,
   updateHabit,
 } from "./api";
 import type {
   CreateHabitRequest,
   CreateSubGroupRequest,
   ReorderHabitItem,
+  StartSessionRequest,
+  StopSessionRequest,
   ToggleCompletionRequest,
+  UpdateDayRunRequest,
   UpdateGroupRequest,
   UpdateHabitRequest,
 } from "./types";
+import { formatDateISO } from "@/lib/dates";
 
 const BOARD_KEY = ["habits", "board"];
+const today = () => formatDateISO(new Date());
+const activityKey = (date?: string) => ["habits", "activity", date ?? today()];
 
 export const useBoard = () =>
   useQuery({ queryKey: BOARD_KEY, queryFn: fetchBoard });
@@ -108,6 +118,44 @@ export const useToggleCompletion = () => {
       if (context?.previous) {
         queryClient.setQueryData(BOARD_KEY, context.previous);
       }
+    },
+  });
+};
+
+export const useDayActivity = (date?: string) =>
+  useQuery({
+    queryKey: activityKey(date),
+    queryFn: () => fetchDayActivity(date),
+    refetchInterval: (query) =>
+      query.state.data?.active_session ? 1000 : false,
+  });
+
+export const useStartSession = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: StartSessionRequest) => startSession(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: activityKey() });
+    },
+  });
+};
+
+export const useStopSession = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: StopSessionRequest) => stopSession(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: activityKey() });
+    },
+  });
+};
+
+export const useUpdateDayRun = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateDayRunRequest) => updateDayRun(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: activityKey() });
     },
   });
 };

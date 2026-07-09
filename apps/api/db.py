@@ -3,9 +3,11 @@ from sqlmodel import SQLModel, Session, create_engine, select
 
 from modules.settings.schemas import AppSettings
 from modules.habits.schemas import (
+    DayRun,
     HabitGroup,
     HabitGroupType,
     Habit,
+    HabitSession,
     parse_duration_suffix,
 )
 
@@ -76,6 +78,18 @@ def migrate_schema() -> None:
             "appsettings",
             "loop_exempt_below_minutes",
             "ALTER TABLE appsettings ADD COLUMN loop_exempt_below_minutes INTEGER NOT NULL DEFAULT 60",
+        )
+        _add_column_if_missing(
+            conn,
+            "completion",
+            "completed_at",
+            "ALTER TABLE completion ADD COLUMN completed_at TEXT",
+        )
+        _add_column_if_missing(
+            conn,
+            "habitsession",
+            "completion_id",
+            "ALTER TABLE habitsession ADD COLUMN completion_id INTEGER REFERENCES completion(id)",
         )
 
 

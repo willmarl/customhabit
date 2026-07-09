@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Response
+from datetime import date
+
+from fastapi import APIRouter, Depends, Query, Response
 from sqlmodel import Session
 
 from db import get_session
@@ -7,20 +9,31 @@ from .schemas import (
     CompletionRead,
     CreateHabitRequest,
     CreateSubGroupRequest,
+    DayActivityResponse,
+    DayRunRead,
     HabitGroupRead,
     HabitRead,
+    HabitSessionRead,
     ReorderHabitsRequest,
+    StartSessionRequest,
+    StopSessionRequest,
     ToggleCompletionRequest,
+    UpdateDayRunRequest,
     UpdateGroupRequest,
     UpdateHabitRequest,
 )
 from .service import HabitService
+from .session_service import SessionService
 
 router = APIRouter(prefix="/habits", tags=["habits"])
 
 
 def get_habit_service(session: Session = Depends(get_session)) -> HabitService:
     return HabitService(session)
+
+
+def get_session_service(session: Session = Depends(get_session)) -> SessionService:
+    return SessionService(session)
 
 
 @router.get("/board", response_model=BoardResponse)
@@ -94,3 +107,51 @@ async def toggle_completion(
     service: HabitService = Depends(get_habit_service),
 ):
     return service.toggle_completion(data)
+
+
+@router.get("/sessions/activity", response_model=DayActivityResponse)
+async def get_day_activity(
+    run_date: date | None = Query(default=None, alias="date"),
+    service: SessionService = Depends(get_session_service),
+):
+    return service.get_day_activity(run_date)
+
+
+@router.get("/sessions", response_model=list[HabitSessionRead])
+async def get_sessions(
+    run_date: date | None = Query(default=None, alias="date"),
+    service: SessionService = Depends(get_session_service),
+):
+    return service.get_sessions(run_date)
+
+
+@router.post("/sessions/start", response_model=HabitSessionRead)
+async def start_session(
+    data: StartSessionRequest,
+    service: SessionService = Depends(get_session_service),
+):
+    return service.start_session(data)
+
+
+@router.post("/sessions/stop", response_model=HabitSessionRead)
+async def stop_session(
+    data: StopSessionRequest,
+    service: SessionService = Depends(get_session_service),
+):
+    return service.stop_session(data)
+
+
+@router.get("/day-run", response_model=DayRunRead | None)
+async def get_day_run(
+    run_date: date | None = Query(default=None, alias="date"),
+    service: SessionService = Depends(get_session_service),
+):
+    return service.get_day_run(run_date)
+
+
+@router.patch("/day-run", response_model=DayRunRead)
+async def update_day_run(
+    data: UpdateDayRunRequest,
+    service: SessionService = Depends(get_session_service),
+):
+    return service.update_day_run(data)

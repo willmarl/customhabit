@@ -63,3 +63,48 @@ export type UpdateHabitRequest = {
 };
 export type ReorderHabitItem = { id: number; sort_order: number };
 export type ToggleCompletionRequest = { habit_id: number; date: string };
+
+export type HabitSession = {
+  id: number;
+  habit_id: number;
+  date: string;
+  started_at: string;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  loop_index: number;
+  source: string;
+};
+
+export type DayRun = {
+  date: string;
+  started_at: string | null;
+  ended_at: string | null;
+  tap_out_at: string | null;
+  status: "active" | "completed" | "tap_out";
+  mode: "normal" | "loop_30" | "in_zone";
+  loop_count: number;
+};
+
+export type DayActivity = {
+  day_run: DayRun | null;
+  sessions: HabitSession[];
+  active_session: HabitSession | null;
+  break_seconds: number[];
+};
+
+export type StartSessionRequest = {
+  habit_id: number;
+  date?: string;
+  loop_index?: number;
+  source?: "manual" | "timer" | "toggle";
+};
+
+export type StopSessionRequest = { session_id: number };
+
+export type UpdateDayRunRequest = {
+  date: string;
+  status?: DayRun["status"];
+  mode?: DayRun["mode"];
+  loop_count?: number;
+  ended_at?: string;
+};

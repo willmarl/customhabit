@@ -1,9 +1,10 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from fastapi import HTTPException
 from sqlmodel import Session, select, delete
 
 from modules.settings.service import SettingsService
+from .session_service import SessionService
 from .schemas import (
     BoardResponse,
     is_valid_sub_color,
@@ -289,11 +290,20 @@ class HabitService:
         ).first()
 
         if existing:
+            if existing.id is not None:
+                SessionService(self.session).remove_inferred_completion(existing.id)
             self.session.delete(existing)
             self.session.commit()
             return None
 
-        completion = Completion(habit_id=data.habit_id, date=data.date)
+        now = datetime.now()
+        completion = Completion(
+            habit_id=data.habit_id, date=data.date, completed_at=now
+        )
         self.session.add(completion)
+        self.session.flush()
+        SessionService(self.session).record_inferred_completion(
+            data.habit_id, data.date, completion.id, now
+        )
         self.session.commit()
         return CompletionRead(habit_id=data.habit_id, date=data.date)
