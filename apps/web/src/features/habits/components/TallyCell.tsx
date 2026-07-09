@@ -54,7 +54,7 @@ export default function TallyCell({
         isInteractive && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
         !isInteractive && "cursor-default",
         checked && checkedClass,
-        !checked && "border-border/70 bg-background",
+        !checked && "border-border bg-card",
         isInteractive && !checked && color?.tallyHover,
         isInteractive && checked && color?.tallyHoverChecked,
       )}

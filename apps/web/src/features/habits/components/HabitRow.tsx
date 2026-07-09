@@ -55,7 +55,7 @@ export default function HabitRow({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-2 border-b border-border/50 py-1.5 last:border-b-0",
+        "flex items-center gap-2 border-b border-border/70 py-1.5 last:border-b-0",
         isDragging && "relative z-10 bg-background opacity-90 shadow-sm",
       )}
     >

@@ -11,7 +11,7 @@ type NotesEditorProps = {
 };
 
 const notepadClassName =
-  "min-h-[72px] rounded-md border border-dashed border-border/70 px-3 py-2 text-left";
+  "min-h-[72px] rounded-md border border-dashed border-border px-3 py-2 text-left";
 
 export default function NotesEditor({ groupId, notes }: NotesEditorProps) {
   const [value, setValue] = useState(notes);

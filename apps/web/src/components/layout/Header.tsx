@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { IconTooltipWrap } from "@/components/ui/icon-tooltip";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 export default function Header() {
   return (
@@ -11,14 +12,17 @@ export default function Header() {
         >
           Custom Habit
         </Link>
-        <IconTooltipWrap tooltip="Settings">
-          <Link
-            to="/settings"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            Settings
-          </Link>
-        </IconTooltipWrap>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <IconTooltipWrap tooltip="Settings">
+            <Link
+              to="/settings"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              Settings
+            </Link>
+          </IconTooltipWrap>
+        </div>
       </div>
     </header>
   );
