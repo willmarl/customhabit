@@ -21,7 +21,7 @@ class HabitGroup(SQLModel, table=True):
 
 
 ALLOWED_SUB_COLORS = frozenset(
-    {"orange", "green", "blue", "violet", "rose", "teal", "amber", "slate"}
+    {"orange", "green", "blue", "violet", "rose", "teal", "slate"}
 )
 
 HEX_COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")

@@ -1,13 +1,12 @@
 import type { CSSProperties } from "react";
 
 export type SubCategoryColorId =
+  | "rose"
   | "orange"
   | "green"
+  | "teal"
   | "blue"
   | "violet"
-  | "rose"
-  | "teal"
-  | "amber"
   | "slate";
 
 export type SubCategoryColorStyles = {
@@ -32,6 +31,19 @@ export type SubCategoryColor = {
 };
 
 export const SUB_CATEGORY_COLORS: SubCategoryColor[] = [
+  {
+    id: "rose",
+    label: "Rose",
+    text: "text-rose-600 dark:text-rose-400",
+    textLinked: "text-rose-400 dark:text-rose-300",
+    tallyChecked:
+      "border-rose-400 bg-rose-500 dark:border-rose-500 dark:bg-rose-500",
+    tallyCheckedLinked:
+      "border-rose-300 bg-rose-400 dark:border-rose-400 dark:bg-rose-400",
+    tallyHover: "hover:border-rose-300 hover:bg-rose-100 dark:hover:bg-rose-950/50",
+    tallyHoverChecked: "hover:border-rose-500 hover:bg-rose-600",
+    swatch: "bg-rose-500",
+  },
   {
     id: "orange",
     label: "Orange",
@@ -59,6 +71,19 @@ export const SUB_CATEGORY_COLORS: SubCategoryColor[] = [
     swatch: "bg-green-500",
   },
   {
+    id: "teal",
+    label: "Teal",
+    text: "text-teal-600 dark:text-teal-400",
+    textLinked: "text-teal-400 dark:text-teal-300",
+    tallyChecked:
+      "border-teal-400 bg-teal-500 dark:border-teal-500 dark:bg-teal-500",
+    tallyCheckedLinked:
+      "border-teal-300 bg-teal-400 dark:border-teal-400 dark:bg-teal-400",
+    tallyHover: "hover:border-teal-300 hover:bg-teal-100 dark:hover:bg-teal-950/50",
+    tallyHoverChecked: "hover:border-teal-500 hover:bg-teal-600",
+    swatch: "bg-teal-500",
+  },
+  {
     id: "blue",
     label: "Blue",
     text: "text-blue-600 dark:text-blue-400",
@@ -83,45 +108,6 @@ export const SUB_CATEGORY_COLORS: SubCategoryColor[] = [
     tallyHover: "hover:border-violet-300 hover:bg-violet-100 dark:hover:bg-violet-950/50",
     tallyHoverChecked: "hover:border-violet-500 hover:bg-violet-600",
     swatch: "bg-violet-500",
-  },
-  {
-    id: "rose",
-    label: "Rose",
-    text: "text-rose-600 dark:text-rose-400",
-    textLinked: "text-rose-400 dark:text-rose-300",
-    tallyChecked:
-      "border-rose-400 bg-rose-500 dark:border-rose-500 dark:bg-rose-500",
-    tallyCheckedLinked:
-      "border-rose-300 bg-rose-400 dark:border-rose-400 dark:bg-rose-400",
-    tallyHover: "hover:border-rose-300 hover:bg-rose-100 dark:hover:bg-rose-950/50",
-    tallyHoverChecked: "hover:border-rose-500 hover:bg-rose-600",
-    swatch: "bg-rose-500",
-  },
-  {
-    id: "teal",
-    label: "Teal",
-    text: "text-teal-600 dark:text-teal-400",
-    textLinked: "text-teal-400 dark:text-teal-300",
-    tallyChecked:
-      "border-teal-400 bg-teal-500 dark:border-teal-500 dark:bg-teal-500",
-    tallyCheckedLinked:
-      "border-teal-300 bg-teal-400 dark:border-teal-400 dark:bg-teal-400",
-    tallyHover: "hover:border-teal-300 hover:bg-teal-100 dark:hover:bg-teal-950/50",
-    tallyHoverChecked: "hover:border-teal-500 hover:bg-teal-600",
-    swatch: "bg-teal-500",
-  },
-  {
-    id: "amber",
-    label: "Amber",
-    text: "text-amber-600 dark:text-amber-400",
-    textLinked: "text-amber-400 dark:text-amber-300",
-    tallyChecked:
-      "border-amber-400 bg-amber-500 dark:border-amber-500 dark:bg-amber-500",
-    tallyCheckedLinked:
-      "border-amber-300 bg-amber-400 dark:border-amber-400 dark:bg-amber-400",
-    tallyHover: "hover:border-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/50",
-    tallyHoverChecked: "hover:border-amber-500 hover:bg-amber-600",
-    swatch: "bg-amber-500",
   },
   {
     id: "slate",
@@ -178,7 +164,8 @@ export function getSubCategoryColor(colorId?: string | null): SubCategoryColor {
     return buildCustomSubCategoryColor(colorId!);
   }
   return (
-    SUB_CATEGORY_COLORS.find((c) => c.id === colorId) ?? SUB_CATEGORY_COLORS[0]
+    SUB_CATEGORY_COLORS.find((c) => c.id === colorId) ??
+    SUB_CATEGORY_COLORS.find((c) => c.id === "orange")!
   );
 }
 

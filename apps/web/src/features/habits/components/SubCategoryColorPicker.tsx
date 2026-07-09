@@ -75,7 +75,7 @@ export default function SubCategoryColorPicker({
             aria-label="Close color picker"
           />
           <div className="absolute left-0 top-full z-50 mt-1.5 rounded-md border border-border/70 bg-background p-2 shadow-sm">
-            <div className="flex gap-1.5">
+            <div className="flex items-center gap-1.5">
               {SUB_CATEGORY_COLORS.map((option) => (
                 <button
                   key={option.id}
@@ -90,6 +90,7 @@ export default function SubCategoryColorPicker({
                   title={option.label}
                 />
               ))}
+              <span className="mx-0.5 h-4 w-px shrink-0 bg-border/70" aria-hidden />
               <button
                 type="button"
                 onClick={openCustomPicker}

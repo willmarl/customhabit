@@ -2,6 +2,7 @@ import { useCallback, useMemo, useOptimistic } from "react";
 import { Plus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { IconTooltipButton } from "@/components/ui/icon-tooltip";
+import { cn } from "@/lib/utils";
 import { useModal } from "@/components/providers/ModalProvider";
 import { useBoard, useToggleCompletion } from "../hooks";
 import type { Completion, ToggleCompletionRequest } from "../types";
@@ -60,6 +61,34 @@ export default function HabitBoard() {
     });
   };
 
+  const addSubCategoryHeaderButton = (
+    <IconTooltipButton
+      variant="outline"
+      size="sm"
+      tooltip="Add sub-category"
+      onClick={handleAddSub}
+    >
+      <Plus className="size-3.5" />
+      Add sub-category
+    </IconTooltipButton>
+  );
+
+  const addSubCategoryFooterButton = (
+    <IconTooltipButton
+      variant="outline"
+      size="default"
+      tooltip="Add another sub-category"
+      onClick={handleAddSub}
+      className={cn(
+        "h-10 gap-2 border-dashed px-6 shadow-sm",
+        "hover:border-foreground/35 hover:bg-muted/80 hover:shadow",
+      )}
+    >
+      <Plus className="size-4" />
+      Add sub-category
+    </IconTooltipButton>
+  );
+
   if (isLoading) {
     return (
       <p className="py-16 text-center text-sm text-muted-foreground">
@@ -95,15 +124,7 @@ export default function HabitBoard() {
           <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
             Sub-categories
           </h2>
-          <IconTooltipButton
-            variant="outline"
-            size="sm"
-            tooltip="Add sub-category"
-            onClick={handleAddSub}
-          >
-            <Plus className="size-3.5" />
-            Add sub-category
-          </IconTooltipButton>
+          {addSubCategoryHeaderButton}
         </div>
 
         {board.sub_groups.length === 0 ? (
@@ -111,18 +132,23 @@ export default function HabitBoard() {
             No sub-categories yet. Add one to track grouped habits.
           </p>
         ) : (
-          board.sub_groups.map((group, i) => (
-            <div key={group.id}>
-              {i > 0 && <Separator className="mb-8" />}
-              <HabitGroupSection
-                group={group}
-                board={board}
-                completions={optimisticCompletions}
-                subGroupColors={subGroupColors}
-                onToggle={handleToggle}
-              />
+          <>
+            {board.sub_groups.map((group, i) => (
+              <div key={group.id}>
+                {i > 0 && <Separator className="mb-8" />}
+                <HabitGroupSection
+                  group={group}
+                  board={board}
+                  completions={optimisticCompletions}
+                  subGroupColors={subGroupColors}
+                  onToggle={handleToggle}
+                />
+              </div>
+            ))}
+            <div className="flex justify-center pt-6">
+              {addSubCategoryFooterButton}
             </div>
-          ))
+          </>
         )}
       </div>
     </div>
