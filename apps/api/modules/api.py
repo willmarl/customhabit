@@ -1,7 +1,9 @@
 from fastapi import APIRouter
-from .todo.router import router as todo_router
+from .habits.router import router as habits_router
+from .settings.router import router as settings_router
 
 router = APIRouter(prefix="/api")
-router.include_router(todo_router)
+router.include_router(habits_router)
+router.include_router(settings_router)
 
 __all__ = ["router"]

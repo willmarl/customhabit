@@ -2,9 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "${PORT:-1234}:${PORT:-8000}"
+      - "${PORT:-1234}:${PORT:-8005}"
     environment:
-      PORT: ${PORT:-8000}
-    volumes:
-      - ~/Downloads/test/:/app/foos
+      PORT: ${PORT:-8005}
     restart: unless-stopped

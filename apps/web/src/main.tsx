@@ -4,9 +4,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./index.css";
 import Providers from "./components/providers/Providers.tsx";
 import Layout from "./components/layout/Layout.tsx";
-import App from "./App.tsx";
-import TodosPage from "./pages/TodosPage.tsx";
-import TestPage from "./pages/Test.tsx";
+import HabitsPage from "./pages/HabitsPage.tsx";
+import SettingsPage from "./pages/SettingsPage.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -14,9 +13,8 @@ createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<App />} />
-            <Route path="/todos" element={<TodosPage />} />
-            <Route path="/test" element={<TestPage />} />
+            <Route path="/" element={<HabitsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

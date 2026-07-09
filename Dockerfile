@@ -45,12 +45,12 @@ RUN chown -R appuser:appuser /app
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Expose port (default 8000, configurable via PORT env var)
-EXPOSE 8000
+# Expose port (default 8005, configurable via PORT env var)
+EXPOSE 8005
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD python -c "import urllib.request, os; urllib.request.urlopen(f'http://localhost:{os.environ.get(\"PORT\", 8000)}/').read()"
+  CMD python -c "import urllib.request, os; urllib.request.urlopen(f'http://localhost:{os.environ.get(\"PORT\", 8005)}/').read()"
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["sh", "-c", "exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8005}"]
