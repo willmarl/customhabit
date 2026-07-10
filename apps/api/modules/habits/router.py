@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlmodel import Session
 
 from db import get_session
@@ -28,6 +28,7 @@ from .schemas import (
     UpdateGroupRequest,
     UpdateHabitRequest,
 )
+from .export_service import ExportService
 from .service import HabitService
 from .session_service import SessionService
 from .snapshot_service import SnapshotService
@@ -50,6 +51,10 @@ def get_snapshot_service(session: Session = Depends(get_session)) -> SnapshotSer
 
 def get_stats_service(session: Session = Depends(get_session)) -> StatsService:
     return StatsService(session)
+
+
+def get_export_service(session: Session = Depends(get_session)) -> ExportService:
+    return ExportService(session)
 
 
 @router.get("/board", response_model=BoardResponse)
@@ -175,6 +180,25 @@ async def get_stats_summary(
     service: StatsService = Depends(get_stats_service),
 ):
     return service.get_summary(from_date, to_date)
+
+
+@router.get("/export/sessions")
+async def export_sessions(
+    format: str = Query(default="jsonl"),
+    from_date: date | None = Query(default=None, alias="from"),
+    to_date: date | None = Query(default=None, alias="to"),
+    service: ExportService = Depends(get_export_service),
+):
+    if format != "jsonl":
+        raise HTTPException(status_code=400, detail="Only format=jsonl is supported")
+    content = service.export_sessions_jsonl(from_date, to_date)
+    return Response(
+        content=content,
+        media_type="application/x-ndjson",
+        headers={
+            "Content-Disposition": 'attachment; filename="habit-sessions.jsonl"'
+        },
+    )
 
 
 @router.get("/snapshots", response_model=list[SnapshotSummary])

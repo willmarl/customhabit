@@ -187,6 +187,20 @@ export default function SettingsPage() {
           )}
         </div>
       </form>
+
+      <section className="mt-8 space-y-3 rounded-md border border-border bg-card p-4">
+        <h3 className="text-sm font-medium">Data export</h3>
+        <p className="text-sm text-muted-foreground">
+          Download session history as JSONL for external analysis (one JSON object
+          per line: habit name, duration, time-of-day, stack position, day mode,
+          tap-out flag, and more).
+        </p>
+        <Button variant="outline" asChild>
+          <a href="/api/habits/export/sessions?format=jsonl" download>
+            Download sessions (JSONL)
+          </a>
+        </Button>
+      </section>
     </div>
   );
 }

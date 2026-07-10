@@ -19,22 +19,27 @@ function levelFor(habitsDone: number, max: number): number {
   return 4;
 }
 
-function formatTooltip(
-  activity: Activity,
-  stackComplete: boolean,
-): string {
-  const label = new Date(activity.date + "T12:00:00").toLocaleDateString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+function formatTooltip(activity: Activity, stackComplete: boolean): string {
+  const label = new Date(activity.date + "T12:00:00").toLocaleDateString(
+    undefined,
+    {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    },
+  );
   if (activity.count === 0) return `${label}: no habits done`;
   const habitLabel = `${activity.count} habit${activity.count === 1 ? "" : "s"} done`;
-  return stackComplete ? `${label}: ${habitLabel} · stack complete` : `${label}: ${habitLabel}`;
+  return stackComplete
+    ? `${label}: ${habitLabel} · stack complete`
+    : `${label}: ${habitLabel}`;
 }
 
-function trimDaysToFitWidth(days: DayStat[], containerWidth: number): DayStat[] {
+function trimDaysToFitWidth(
+  days: DayStat[],
+  containerWidth: number,
+): DayStat[] {
   if (containerWidth <= 0 || days.length === 0) return days;
 
   let trimmed = days;
@@ -99,7 +104,9 @@ export default function ContributionHeatmap({
 
   if (days.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">No activity in this period.</p>
+      <p className="text-sm text-muted-foreground">
+        No activity in this period.
+      </p>
     );
   }
 
@@ -107,7 +114,8 @@ export default function ContributionHeatmap({
     <div className="space-y-2">
       {trimmed && (
         <p className="text-xs text-muted-foreground">
-          Showing recent weeks to fit your screen. Widen the window to see the full year.
+          Showing recent weeks to fit your screen. Widen the window to see the
+          full year.
         </p>
       )}
       <div ref={containerRef} className="w-full min-w-0">
@@ -130,7 +138,10 @@ export default function ContributionHeatmap({
           tooltips={{
             activity: {
               text: (activity) =>
-                formatTooltip(activity, stackByDate.get(activity.date) ?? false),
+                formatTooltip(
+                  activity,
+                  stackByDate.get(activity.date) ?? false,
+                ),
             },
           }}
         />
