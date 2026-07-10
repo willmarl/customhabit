@@ -1,4 +1,4 @@
-# Custom Habit
+# customhabit
 
 A personal habit tracker inspired by Obsidian tally markers. Track Core habits and optional sub-category tables with drag-and-drop reordering, a click-to-tally date grid, and markdown notes per table.
 
@@ -6,16 +6,23 @@ A personal habit tracker inspired by Obsidian tally markers. Track Core habits a
 
 ## Features
 
-- **Core table** — one main habit list; always present
-- **Sub-categories** — 0 to N grouped tables; creating one auto-adds a linked row in Core
+- **Core table** — your main habit list; always present
+- **Sub-categories** — optional grouped tables; each one auto-adds a linked row in Core
+- **Linked rows** — Core row checks off when all habits in that sub-category are done for the day
+- **Tally grid** — click a date cell to toggle completion (default: last 7 days; configurable in Settings)
 - **Drag-and-drop** — reorder habits within any table
-- **Tally grid** — click a date cell to toggle completion (default: last 7 days)
-- **Markdown notes** — optional notes under each table with live preview
-- **Settings-ready** — lookback window stored in the backend for a future settings page
+- **Markdown notes** — optional notes under each table with live preview; auto-saved
+- **Day-run bar** — normal, loop, and tap-out modes with finish-time estimates
+- **Stats** — activity heatmap and streak tracking
+- **Board snapshots** — save and restore habit layouts
+- **Retired habits** — remove from active boards without losing history
+- **Settings** — lookback window, day timing, and other preferences
+- **Light/dark theme**
 
 ## Architecture
+You get one **Core** table plus optional **sub-category** tables. Sub-categories auto-add a linked row in Core, so you can see the big picture and drill into groups (work, health, chores, etc.) without duplicating habits.
 
-Everything runs on a **single port**. In production (Docker), FastAPI serves both the API and the React frontend as static files.
+Click date cells to tally completions, drag habits to reorder, and jot markdown notes under each table. Stats, snapshots, and day-run timing are built in — but at its core it's a tally grid with SQLite behind it.
 
 ```
 browser → :8005
@@ -23,59 +30,30 @@ browser → :8005
            └── /*       → React SPA (built static files served by FastAPI)
 ```
 
-During **local dev**, Vite runs its own dev server (with HMR) and proxies `/api` requests to FastAPI on `:8005`:
+## Install/setup
 
-```
-browser → Vite :5173 → /api/* proxied → FastAPI :8005
-```
-
-**Stack:** FastAPI + SQLModel (SQLite) · React 19 + Vite · shadcn/ui · TanStack Query · @dnd-kit
-
-## Dev setup
-
-### Install
+Have Docker installed.
 
 ```bash
-cd apps/api
-uv venv
-source .venv/bin/activate
-uv pip install -r requirements.txt
-
-cd ../web
-pnpm install
+docker run -d -p 1234:8005 willmarl/customhabit:latest
 ```
 
-### Run
+Open a browser and go to `http://<your-pc-ip>:1234/` (e.g. `http://192.168.0.230:1234/`).
+
+SQLite creates itself on first run — no setup step. Data lives at `/app/database.db` inside the container.
+
+To keep habits across container restarts/upgrades, mount a volume:
 
 ```bash
-# terminal 1 — backend
-cd apps/api
-source .venv/bin/activate
-python3 main.py
-
-# terminal 2 — frontend
-cd apps/web
-pnpm run dev
+docker run -d -p 1234:8005 -v customhabit-data:/app willmarl/customhabit:latest
 ```
 
-Visit `http://localhost:5173`
 
-## Docker Compose
 
-```bash
-docker compose up --build
-```
 
-Visit `http://localhost:1234`
 
-## Docker image
+## Tech stack
 
-```bash
-docker build -t customhabit:latest .
-
-docker run -p 1234:8005 customhabit:latest
-```
-
-Visit `http://localhost:1234`
-
-Data is stored in `apps/api/database.db` (SQLite). In Docker, mount a volume to persist it across restarts.
+- (Backend) FastAPI
+  - SQLite DB
+- (Frontend) Vite + React
