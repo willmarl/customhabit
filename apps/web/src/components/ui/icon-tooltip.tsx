@@ -29,13 +29,20 @@ export function IconTooltipButton({
 type IconTooltipWrapProps = {
   tooltip: string;
   children: ReactNode;
+  side?: "top" | "right" | "bottom" | "left";
 };
 
-export function IconTooltipWrap({ tooltip, children }: IconTooltipWrapProps) {
+export function IconTooltipWrap({
+  tooltip,
+  children,
+  side,
+}: IconTooltipWrapProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent sideOffset={6}>{tooltip}</TooltipContent>
+      <TooltipContent side={side} sideOffset={6}>
+        {tooltip}
+      </TooltipContent>
     </Tooltip>
   );
 }

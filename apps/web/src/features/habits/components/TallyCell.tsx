@@ -12,6 +12,7 @@ type TallyCellProps = {
   accentColor?: SubCategoryColor;
   accentTone?: "full" | "linked";
   tooltip?: string;
+  tooltipSide?: "top" | "right" | "bottom" | "left";
   onToggle?: () => void;
 };
 
@@ -22,6 +23,7 @@ export default function TallyCell({
   accentColor,
   accentTone = "full",
   tooltip,
+  tooltipSide,
   onToggle,
 }: TallyCellProps) {
   const resolved: CellProgress =
@@ -45,7 +47,7 @@ export default function TallyCell({
 
     if (tooltip) {
       return (
-        <IconTooltipWrap tooltip={tooltip}>
+        <IconTooltipWrap tooltip={tooltip} side={tooltipSide}>
           <span className="inline-flex cursor-help">{emptyCell}</span>
         </IconTooltipWrap>
       );
@@ -117,7 +119,7 @@ export default function TallyCell({
 
   if (tooltip) {
     return (
-      <IconTooltipWrap tooltip={tooltip}>
+      <IconTooltipWrap tooltip={tooltip} side={tooltipSide}>
         <span className="inline-flex cursor-help">{cell}</span>
       </IconTooltipWrap>
     );

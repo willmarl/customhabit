@@ -87,7 +87,7 @@ export default function HabitRow({
           {label}
         </span>
         {isLinked ? (
-          <IconTooltipWrap tooltip={linkedNameTooltip}>
+          <IconTooltipWrap tooltip={linkedNameTooltip} side="left">
             <button
               type="button"
               onClick={() => onLinkedClick?.(linkedSubGroupId!)}
@@ -158,6 +158,7 @@ export default function HabitRow({
                 checked={false}
                 variant="empty"
                 tooltip={isLinked ? linkedTooltip : undefined}
+                tooltipSide={isLinked ? "left" : undefined}
               />
             );
           }
@@ -171,6 +172,7 @@ export default function HabitRow({
                 accentColor={linkedColor}
                 accentTone="linked"
                 tooltip={linkedTooltip}
+                tooltipSide="left"
               />
             );
           }
