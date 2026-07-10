@@ -13,7 +13,7 @@ export default function TapOutConfirmDialog({ date }: TapOutConfirmDialogProps) 
       message="Finish-time estimates will pause for today. Completions you've already logged are kept."
       variant="destructive"
       buttonMessage="Tap out"
-      onConfirm={() => tapOut({ date })}
+      onConfirm={() => void tapOut({ date })}
     />
   );
 }

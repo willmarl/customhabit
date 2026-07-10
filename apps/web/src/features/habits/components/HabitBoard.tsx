@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { IconTooltipButton } from "@/components/ui/icon-tooltip";
 import { cn } from "@/lib/utils";
-import { formatDateISO, getHabitDate } from "@/lib/dates";
+import { getHabitDate } from "@/lib/dates";
 import { useModal } from "@/components/providers/ModalProvider";
 import { useBoard, useToggleCompletion } from "../hooks";
 import type { ToggleCompletionRequest } from "../types";

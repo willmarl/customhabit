@@ -1,5 +1,5 @@
 import { compareFinishToBed, parseTimeOnDate, resolveBedtime } from "@/lib/dates";
-import type { AppSettings, Board, Habit } from "../types";
+import type { Board, Habit } from "../types";
 
 export type StackHabit = Pick<Habit, "id" | "duration_minutes" | "once_per_day" | "name">;
 

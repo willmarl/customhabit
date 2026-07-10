@@ -41,7 +41,6 @@ import { getHabitDate } from "@/lib/dates";
 const BOARD_KEY = ["habits", "board"];
 const RETIRED_KEY = ["habits", "retired"];
 const SNAPSHOTS_KEY = ["habits", "snapshots"];
-const STATS_KEY = ["habits", "stats"];
 const snapshotKey = (id: number) => ["habits", "snapshots", id];
 const statsKey = (from?: string, to?: string) => ["habits", "stats", from ?? "", to ?? ""];
 const today = () => getHabitDate();

@@ -66,7 +66,7 @@ function ManageHabitRow({ habit }: { habit: Habit }) {
         <ConfirmModal
           message={`"${habit.name}" will be hidden from your active board. Completion history is kept — you can restore it later from Retired habits.`}
           buttonMessage="Retire"
-          onConfirm={() => retireHabit(habit.id)}
+          onConfirm={() => void retireHabit(habit.id)}
         />
       ),
     });
