@@ -6,6 +6,7 @@ import Providers from "./components/providers/Providers.tsx";
 import Layout from "./components/layout/Layout.tsx";
 import HabitsPage from "./pages/HabitsPage.tsx";
 import SettingsPage from "./pages/SettingsPage.tsx";
+import SnapshotsPage from "./pages/SnapshotsPage.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -15,6 +16,7 @@ createRoot(document.getElementById("root")!).render(
           <Route element={<Layout />}>
             <Route path="/" element={<HabitsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/snapshots" element={<SnapshotsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

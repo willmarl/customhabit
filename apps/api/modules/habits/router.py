@@ -8,6 +8,7 @@ from .schemas import (
     BoardResponse,
     CompletionRead,
     CreateHabitRequest,
+    CreateSnapshotRequest,
     CreateSubGroupRequest,
     DayActivityResponse,
     DayRunRead,
@@ -16,6 +17,8 @@ from .schemas import (
     HabitSessionRead,
     ReorderHabitsRequest,
     RetiredHabitsResponse,
+    SnapshotDetail,
+    SnapshotSummary,
     StartSessionRequest,
     StopSessionRequest,
     TapOutRequest,
@@ -26,6 +29,7 @@ from .schemas import (
 )
 from .service import HabitService
 from .session_service import SessionService
+from .snapshot_service import SnapshotService
 
 router = APIRouter(prefix="/habits", tags=["habits"])
 
@@ -36,6 +40,10 @@ def get_habit_service(session: Session = Depends(get_session)) -> HabitService:
 
 def get_session_service(session: Session = Depends(get_session)) -> SessionService:
     return SessionService(session)
+
+
+def get_snapshot_service(session: Session = Depends(get_session)) -> SnapshotService:
+    return SnapshotService(session)
 
 
 @router.get("/board", response_model=BoardResponse)
@@ -152,6 +160,36 @@ async def tap_out_day(
 @router.get("/retired", response_model=RetiredHabitsResponse)
 async def get_retired_habits(service: HabitService = Depends(get_habit_service)):
     return service.get_retired_habits()
+
+
+@router.get("/snapshots", response_model=list[SnapshotSummary])
+async def list_snapshots(service: SnapshotService = Depends(get_snapshot_service)):
+    return service.list_snapshots()
+
+
+@router.post("/snapshots", response_model=SnapshotDetail)
+async def create_snapshot(
+    data: CreateSnapshotRequest,
+    service: SnapshotService = Depends(get_snapshot_service),
+):
+    return service.create_snapshot(data)
+
+
+@router.get("/snapshots/{snapshot_id}", response_model=SnapshotDetail)
+async def get_snapshot(
+    snapshot_id: int,
+    service: SnapshotService = Depends(get_snapshot_service),
+):
+    return service.get_snapshot(snapshot_id)
+
+
+@router.post("/snapshots/{snapshot_id}/restore", response_model=BoardResponse)
+async def restore_snapshot(
+    snapshot_id: int,
+    snapshot_service: SnapshotService = Depends(get_snapshot_service),
+    habit_service: HabitService = Depends(get_habit_service),
+):
+    return snapshot_service.restore_snapshot(snapshot_id, habit_service)
 
 
 # Parameterized habit routes last — otherwise "/day-run" matches habit_id

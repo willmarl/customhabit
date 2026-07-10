@@ -1,14 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createHabit,
+  createSnapshot,
   createSubGroup,
   deleteHabit,
   deleteSubGroup,
   fetchBoard,
   fetchDayActivity,
   fetchRetiredHabits,
+  fetchSnapshot,
+  fetchSnapshots,
   reorderHabits,
   restoreHabit,
+  restoreSnapshot,
   retireHabit,
   startSession,
   stopSession,
@@ -20,6 +24,7 @@ import {
 } from "./api";
 import type {
   CreateHabitRequest,
+  CreateSnapshotRequest,
   CreateSubGroupRequest,
   ReorderHabitItem,
   StartSessionRequest,
@@ -34,6 +39,8 @@ import { getHabitDate } from "@/lib/dates";
 
 const BOARD_KEY = ["habits", "board"];
 const RETIRED_KEY = ["habits", "retired"];
+const SNAPSHOTS_KEY = ["habits", "snapshots"];
+const snapshotKey = (id: number) => ["habits", "snapshots", id];
 const today = () => getHabitDate();
 const activityKey = (date?: string) => ["habits", "activity", date ?? today()];
 
@@ -178,6 +185,38 @@ export const useRestoreHabit = () => {
     onSuccess: (board) => {
       queryClient.setQueryData(BOARD_KEY, board);
       queryClient.invalidateQueries({ queryKey: RETIRED_KEY });
+    },
+  });
+};
+
+export const useSnapshots = () =>
+  useQuery({ queryKey: SNAPSHOTS_KEY, queryFn: fetchSnapshots });
+
+export const useSnapshot = (id: number | null) =>
+  useQuery({
+    queryKey: snapshotKey(id ?? 0),
+    queryFn: () => fetchSnapshot(id!),
+    enabled: id != null,
+  });
+
+export const useCreateSnapshot = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateSnapshotRequest) => createSnapshot(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SNAPSHOTS_KEY });
+    },
+  });
+};
+
+export const useRestoreSnapshot = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => restoreSnapshot(id),
+    onSuccess: (board) => {
+      queryClient.setQueryData(BOARD_KEY, board);
+      queryClient.invalidateQueries({ queryKey: RETIRED_KEY });
+      queryClient.invalidateQueries({ queryKey: SNAPSHOTS_KEY });
     },
   });
 };

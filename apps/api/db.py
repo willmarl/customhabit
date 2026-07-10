@@ -4,6 +4,7 @@ from sqlmodel import SQLModel, Session, create_engine, select
 from modules.settings.schemas import AppSettings
 from modules.habits.schemas import (
     DayRun,
+    HabitBoardSnapshot,
     HabitGroup,
     HabitGroupType,
     Habit,

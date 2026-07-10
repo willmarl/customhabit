@@ -3,6 +3,7 @@ from enum import Enum
 import re
 from typing import Optional
 
+from sqlalchemy import Column, Text
 from sqlmodel import SQLModel, Field
 
 
@@ -126,6 +127,33 @@ class RetiredHabitRead(HabitRead):
 class RetiredHabitsResponse(SQLModel):
     habits: list[RetiredHabitRead]
     completions: list[CompletionRead]
+
+
+class HabitBoardSnapshot(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    created_at: datetime = Field(default_factory=datetime.now)
+    payload: str = Field(sa_column=Column(Text, nullable=False))
+
+
+class SnapshotPayload(SQLModel):
+    core_group: HabitGroupRead
+    sub_groups: list[HabitGroupRead]
+    habits: list[HabitRead]
+
+
+class SnapshotSummary(SQLModel):
+    id: int
+    name: str
+    created_at: datetime
+
+
+class SnapshotDetail(SnapshotSummary):
+    payload: SnapshotPayload
+
+
+class CreateSnapshotRequest(SQLModel):
+    name: str
 
 
 class BoardResponse(SQLModel):

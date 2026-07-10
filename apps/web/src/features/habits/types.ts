@@ -126,3 +126,21 @@ export type UpdateDayRunRequest = {
   loop_count?: number;
   ended_at?: string;
 };
+
+export type SnapshotPayload = {
+  core_group: HabitGroup;
+  sub_groups: HabitGroup[];
+  habits: Habit[];
+};
+
+export type SnapshotSummary = {
+  id: number;
+  name: string;
+  created_at: string;
+};
+
+export type SnapshotDetail = SnapshotSummary & {
+  payload: SnapshotPayload;
+};
+
+export type CreateSnapshotRequest = { name: string };

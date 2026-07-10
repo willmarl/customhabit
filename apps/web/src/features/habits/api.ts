@@ -3,6 +3,7 @@ import type {
   Board,
   Completion,
   CreateHabitRequest,
+  CreateSnapshotRequest,
   CreateSubGroupRequest,
   DayActivity,
   DayRun,
@@ -11,6 +12,8 @@ import type {
   HabitSession,
   ReorderHabitItem,
   RetiredHabits,
+  SnapshotDetail,
+  SnapshotSummary,
   StartSessionRequest,
   StopSessionRequest,
   TapOutRequest,
@@ -83,3 +86,15 @@ export const retireHabit = (id: number) =>
 
 export const restoreHabit = (id: number) =>
   kyClient.post(`habits/${id}/restore`).json<Board>();
+
+export const fetchSnapshots = () =>
+  kyClient.get("habits/snapshots").json<SnapshotSummary[]>();
+
+export const fetchSnapshot = (id: number) =>
+  kyClient.get(`habits/snapshots/${id}`).json<SnapshotDetail>();
+
+export const createSnapshot = (data: CreateSnapshotRequest) =>
+  kyClient.post("habits/snapshots", { json: data }).json<SnapshotDetail>();
+
+export const restoreSnapshot = (id: number) =>
+  kyClient.post(`habits/snapshots/${id}/restore`).json<Board>();

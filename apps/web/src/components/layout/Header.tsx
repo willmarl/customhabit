@@ -12,7 +12,13 @@ export default function Header() {
         >
           Custom Habit
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <Link
+            to="/snapshots"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            Snapshots
+          </Link>
           <ThemeToggle />
           <IconTooltipWrap tooltip="Settings">
             <Link
