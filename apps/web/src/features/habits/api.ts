@@ -14,6 +14,7 @@ import type {
   RetiredHabits,
   SnapshotDetail,
   SnapshotSummary,
+  StatsSummary,
   StartSessionRequest,
   StopSessionRequest,
   TapOutRequest,
@@ -98,3 +99,13 @@ export const createSnapshot = (data: CreateSnapshotRequest) =>
 
 export const restoreSnapshot = (id: number) =>
   kyClient.post(`habits/snapshots/${id}/restore`).json<Board>();
+
+export const fetchStatsSummary = (from?: string, to?: string) =>
+  kyClient
+    .get("habits/stats/summary", {
+      searchParams: {
+        ...(from ? { from } : {}),
+        ...(to ? { to } : {}),
+      },
+    })
+    .json<StatsSummary>();

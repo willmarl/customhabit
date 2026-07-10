@@ -156,6 +156,23 @@ class CreateSnapshotRequest(SQLModel):
     name: str
 
 
+class DayStatRead(SQLModel):
+    date: date
+    habits_done: int
+    stack_complete: bool
+
+
+class StatsSummaryRead(SQLModel):
+    from_date: date
+    to_date: date
+    days: list[DayStatRead]
+    max_habits_in_day: int
+    lifetime_habits_done: int
+    current_streak: int
+    longest_streak: int
+    longest_true_streak: int
+
+
 class BoardResponse(SQLModel):
     core_group: HabitGroupRead
     sub_groups: list[HabitGroupRead]

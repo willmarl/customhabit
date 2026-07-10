@@ -10,6 +10,7 @@ import {
   fetchRetiredHabits,
   fetchSnapshot,
   fetchSnapshots,
+  fetchStatsSummary,
   reorderHabits,
   restoreHabit,
   restoreSnapshot,
@@ -40,7 +41,9 @@ import { getHabitDate } from "@/lib/dates";
 const BOARD_KEY = ["habits", "board"];
 const RETIRED_KEY = ["habits", "retired"];
 const SNAPSHOTS_KEY = ["habits", "snapshots"];
+const STATS_KEY = ["habits", "stats"];
 const snapshotKey = (id: number) => ["habits", "snapshots", id];
+const statsKey = (from?: string, to?: string) => ["habits", "stats", from ?? "", to ?? ""];
 const today = () => getHabitDate();
 const activityKey = (date?: string) => ["habits", "activity", date ?? today()];
 
@@ -220,3 +223,9 @@ export const useRestoreSnapshot = () => {
     },
   });
 };
+
+export const useStatsSummary = (from?: string, to?: string) =>
+  useQuery({
+    queryKey: statsKey(from, to),
+    queryFn: () => fetchStatsSummary(from, to),
+  });

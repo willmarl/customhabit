@@ -14,6 +14,12 @@ export default function Header() {
         </Link>
         <div className="flex items-center gap-3">
           <Link
+            to="/stats"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            Stats
+          </Link>
+          <Link
             to="/snapshots"
             className="text-sm font-medium text-muted-foreground hover:text-foreground"
           >

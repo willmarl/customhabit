@@ -19,6 +19,7 @@ from .schemas import (
     RetiredHabitsResponse,
     SnapshotDetail,
     SnapshotSummary,
+    StatsSummaryRead,
     StartSessionRequest,
     StopSessionRequest,
     TapOutRequest,
@@ -30,6 +31,7 @@ from .schemas import (
 from .service import HabitService
 from .session_service import SessionService
 from .snapshot_service import SnapshotService
+from .stats_service import StatsService
 
 router = APIRouter(prefix="/habits", tags=["habits"])
 
@@ -44,6 +46,10 @@ def get_session_service(session: Session = Depends(get_session)) -> SessionServi
 
 def get_snapshot_service(session: Session = Depends(get_session)) -> SnapshotService:
     return SnapshotService(session)
+
+
+def get_stats_service(session: Session = Depends(get_session)) -> StatsService:
+    return StatsService(session)
 
 
 @router.get("/board", response_model=BoardResponse)
@@ -160,6 +166,15 @@ async def tap_out_day(
 @router.get("/retired", response_model=RetiredHabitsResponse)
 async def get_retired_habits(service: HabitService = Depends(get_habit_service)):
     return service.get_retired_habits()
+
+
+@router.get("/stats/summary", response_model=StatsSummaryRead)
+async def get_stats_summary(
+    from_date: date | None = Query(default=None, alias="from"),
+    to_date: date | None = Query(default=None, alias="to"),
+    service: StatsService = Depends(get_stats_service),
+):
+    return service.get_summary(from_date, to_date)
 
 
 @router.get("/snapshots", response_model=list[SnapshotSummary])

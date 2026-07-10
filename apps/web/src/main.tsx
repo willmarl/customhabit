@@ -7,6 +7,7 @@ import Layout from "./components/layout/Layout.tsx";
 import HabitsPage from "./pages/HabitsPage.tsx";
 import SettingsPage from "./pages/SettingsPage.tsx";
 import SnapshotsPage from "./pages/SnapshotsPage.tsx";
+import StatsPage from "./pages/StatsPage.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -17,6 +18,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/" element={<HabitsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/snapshots" element={<SnapshotsPage />} />
+            <Route path="/stats" element={<StatsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

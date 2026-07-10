@@ -144,3 +144,20 @@ export type SnapshotDetail = SnapshotSummary & {
 };
 
 export type CreateSnapshotRequest = { name: string };
+
+export type DayStat = {
+  date: string;
+  habits_done: number;
+  stack_complete: boolean;
+};
+
+export type StatsSummary = {
+  from_date: string;
+  to_date: string;
+  days: DayStat[];
+  max_habits_in_day: number;
+  lifetime_habits_done: number;
+  current_streak: number;
+  longest_streak: number;
+  longest_true_streak: number;
+};
