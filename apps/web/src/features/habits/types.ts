@@ -57,7 +57,7 @@ export type DayRun = {
   ended_at: string | null;
   tap_out_at: string | null;
   status: "active" | "completed" | "tap_out";
-  mode: "normal" | "loop_30" | "in_zone";
+  mode: "normal" | "half" | "loop_30" | "in_zone";
   loop_count: number;
 };
 

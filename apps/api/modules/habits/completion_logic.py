@@ -22,6 +22,8 @@ def get_loops_target(
         return 1
     if day_run is None or day_run.mode == DayRunMode.normal.value:
         return 1
+    if day_run.mode == DayRunMode.half.value:
+        return 2
     if habit.duration_minutes < settings.loop_exempt_below_minutes:
         return 1
     return day_run.loop_count if day_run.loop_count > 0 else 2

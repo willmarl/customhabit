@@ -29,12 +29,13 @@ export function formatDurationMinutes(
   minutes: number,
   style: "short" | "long" = "short",
 ): string {
-  if (minutes < 60) {
-    return `${minutes}m`;
+  const total = Math.ceil(Math.max(0, minutes));
+  if (total < 60) {
+    return `${total}m`;
   }
 
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
+  const hours = Math.floor(total / 60);
+  const mins = total % 60;
   const hr = style === "long" ? "hr" : "h";
 
   if (mins === 0) {

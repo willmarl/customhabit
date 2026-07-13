@@ -129,20 +129,6 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="playlist_minutes">Playlist length (minutes)</Label>
-              <Input
-                id="playlist_minutes"
-                type="number"
-                min={1}
-                step={1}
-                value={form.playlist_minutes}
-                onChange={(e) => setNumber("playlist_minutes", e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Soft timer anchor for ~1 hour blocks (53 minute playlist + wrap-up).
-              </p>
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="lookback_days">Tally lookback (days)</Label>
               <Input
                 id="lookback_days"
@@ -152,29 +138,6 @@ export default function SettingsPage() {
                 onChange={(e) => setNumber("lookback_days", e.target.value)}
               />
             </div>
-          </div>
-        </section>
-
-        <section className="space-y-4 rounded-md border border-border bg-card p-4">
-          <h3 className="text-sm font-medium">Loop mode</h3>
-          <div className="space-y-2 sm:max-w-xs">
-            <Label htmlFor="loop_exempt_below_minutes">
-              Exempt from double-loop below (minutes)
-            </Label>
-            <Input
-              id="loop_exempt_below_minutes"
-              type="number"
-              min={0}
-              value={form.loop_exempt_below_minutes}
-              onChange={(e) =>
-                setNumber("loop_exempt_below_minutes", e.target.value)
-              }
-            />
-            <p className="text-xs text-muted-foreground">
-              On loop days, habits shorter than this run once instead of looping.
-              For example, at 40 any habit under 40 minutes is done in a single
-              pass.
-            </p>
           </div>
         </section>
 

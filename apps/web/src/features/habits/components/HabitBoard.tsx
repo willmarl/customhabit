@@ -13,14 +13,11 @@ import HabitGroupSection from "./HabitGroupSection";
 import CreateSubCategoryDialog from "./CreateSubCategoryDialog";
 import DayEstimateBar from "./DayEstimateBar";
 import DayModeBar from "./DayModeBar";
-import LoopIterationBar from "./LoopIterationBar";
 import RetiredHabitsPanel from "./RetiredHabitsPanel";
-import { useLoopModeUi } from "../hooks/useLoopModeUi";
 
 export default function HabitBoard() {
   const { data: board, isLoading, isError } = useBoard();
   const { mutate: toggleCompletion } = useToggleCompletion();
-  const { enabled: loopViewEnabled, toggle: toggleLoopView } = useLoopModeUi();
   const { openModal, closeModal } = useModal();
   const confettiFired = useRef(false);
   const today = getHabitDate(new Date(), board?.settings.day_start_time);
@@ -116,12 +113,6 @@ export default function HabitBoard() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-6 py-8 text-left">
       <DayModeBar board={board} />
-      <LoopIterationBar
-        board={board}
-        completions={completions}
-        enabled={loopViewEnabled}
-        onToggle={toggleLoopView}
-      />
       <DayEstimateBar board={board} completions={completions} />
 
       <HabitGroupSection

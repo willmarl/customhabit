@@ -9,6 +9,7 @@ export function getLoopsTarget(
 ): number {
   if (habit.once_per_day) return 1;
   if (!dayRun || dayRun.mode === "normal") return 1;
+  if (dayRun.mode === "half") return 2;
   if (habit.duration_minutes < settings.loop_exempt_below_minutes) return 1;
   return dayRun.loop_count > 0 ? dayRun.loop_count : 2;
 }
@@ -69,12 +70,15 @@ export function estimateRemainingMinutes(
     const loopsLeft = Math.max(0, target - done);
     if (loopsLeft === 0) continue;
 
-    const perLoop =
-      board.day_run?.mode === "loop_30" && target > 1
-        ? Math.min(loopSessionMinutes, habit.duration_minutes)
-        : habit.duration_minutes;
-
-    total += perLoop * loopsLeft;
+    if (board.day_run?.mode === "half" && target > 1) {
+      total += habit.duration_minutes * (loopsLeft / target);
+    } else {
+      const perLoop =
+        board.day_run?.mode === "loop_30" && target > 1
+          ? Math.min(loopSessionMinutes, habit.duration_minutes)
+          : habit.duration_minutes;
+      total += perLoop * loopsLeft;
+    }
     remainingCount += 1;
   }
 

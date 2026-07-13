@@ -234,8 +234,9 @@ class DayRunStatus(str, Enum):
 
 class DayRunMode(str, Enum):
     normal = "normal"
-    loop_30 = "loop_30"
-    in_zone = "in_zone"
+    half = "half"
+    loop_30 = "loop_30"  # vestigial
+    in_zone = "in_zone"  # vestigial
 
 
 class HabitSession(SQLModel, table=True):

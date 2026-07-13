@@ -1,7 +1,8 @@
+import { useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/components/providers/ModalProvider";
-import type { Board, DayRun } from "../types";
+import type { Board } from "../types";
 import { useTapOut, useUpdateDayRun } from "../hooks";
 import { getHabitDate } from "@/lib/dates";
 import TapOutConfirmDialog from "./TapOutConfirmDialog";
@@ -10,11 +11,28 @@ type DayModeBarProps = {
   board: Board;
 };
 
-const MODES: { id: DayRun["mode"]; label: string; hint: string }[] = [
-  { id: "normal", label: "Normal", hint: "1 pass per habit" },
-  { id: "loop_30", label: "30m×2", hint: "Two 30-minute loops" },
-  { id: "in_zone", label: "In zone", hint: "Full hour in one pass skips loop 2" },
+const MODES: { id: "normal" | "half"; label: string; hint: string; shortcut: string }[] = [
+  {
+    id: "normal",
+    label: "Normal",
+    hint: "One tap marks a habit done",
+    shortcut: "1",
+  },
+  {
+    id: "half",
+    label: "½ Half",
+    hint: "First tap half-fills; second tap completes",
+    shortcut: "2",
+  },
 ];
+
+function shouldIgnoreModeShortcut(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return true;
+  if (target.closest('[role="dialog"]')) return true;
+  const tag = target.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+  return target.isContentEditable;
+}
 
 export default function DayModeBar({ board }: DayModeBarProps) {
   const today = getHabitDate(new Date(), board.settings.day_start_time);
@@ -26,9 +44,30 @@ export default function DayModeBar({ board }: DayModeBarProps) {
   const mode = dayRun?.mode ?? "normal";
   const tappedOut = dayRun?.status === "tap_out";
 
-  const setMode = (next: DayRun["mode"]) => {
-    updateDayRun({ date: today, mode: next, loop_count: next === "loop_30" ? 2 : dayRun?.loop_count ?? 2 });
-  };
+  const setMode = useCallback(
+    (next: "normal" | "half") => {
+      updateDayRun({ date: today, mode: next });
+    },
+    [today, updateDayRun],
+  );
+
+  useEffect(() => {
+    if (tappedOut) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (shouldIgnoreModeShortcut(e.target)) return;
+
+      const next =
+        e.key === "1" ? "normal" : e.key === "2" ? "half" : null;
+      if (!next || isUpdating) return;
+
+      setMode(next);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [tappedOut, isUpdating, setMode]);
 
   const handleTapOutClick = () => {
     openModal({
@@ -73,9 +112,10 @@ export default function DayModeBar({ board }: DayModeBarProps) {
             key={m.id}
             type="button"
             variant={mode === m.id ? "default" : "outline"}
+            aria-pressed={mode === m.id}
             size="sm"
             disabled={isUpdating}
-            title={m.hint}
+            title={`${m.hint} (press ${m.shortcut})`}
             onClick={() => setMode(m.id)}
             className={cn("h-8")}
           >
