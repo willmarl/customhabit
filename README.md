@@ -4,6 +4,8 @@ A personal habit tracker inspired by Obsidian tally markers. Track Core habits a
 
 ![preview](./image.jpg)
 
+> [more screenshots](./screenshots/screenshots.md)
+
 ## Features
 
 - **Core table** — your main habit list; always present
