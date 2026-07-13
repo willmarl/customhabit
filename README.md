@@ -12,7 +12,7 @@ A personal habit tracker inspired by Obsidian tally markers. Track Core habits a
 - **Tally grid** — click a date cell to toggle completion (default: last 7 days; configurable in Settings)
 - **Drag-and-drop** — reorder habits within any table
 - **Markdown notes** — optional notes under each table with live preview; auto-saved
-- **Day-run bar** — normal, loop, and tap-out modes with finish-time estimates
+- **Day-run bar** — normal or half mode (two-tap half-fill), plus tap-out (IDC)
 - **Stats** — activity heatmap and streak tracking
 - **Board snapshots** — save and restore habit layouts
 - **Retired habits** — remove from active boards without losing history
@@ -20,6 +20,7 @@ A personal habit tracker inspired by Obsidian tally markers. Track Core habits a
 - **Light/dark theme**
 
 ## Architecture
+
 You get one **Core** table plus optional **sub-category** tables. Sub-categories auto-add a linked row in Core, so you can see the big picture and drill into groups (work, health, chores, etc.) without duplicating habits.
 
 Click date cells to tally completions, drag habits to reorder, and jot markdown notes under each table. Stats, snapshots, and day-run timing are built in — but at its core it's a tally grid with SQLite behind it.
@@ -32,25 +33,35 @@ browser → :8005
 
 ## Install/setup
 
-Have Docker installed.
+Have [Docker](https://docs.docker.com/get-docker/) installed (Compose V2 included).
 
-```bash
-docker run -d -p 1234:8005 willmarl/customhabit:latest
+1. Create a folder and put this `docker-compose.yml` in it:
+
+```yaml
+services:
+  app:
+    image: willmarl/customhabit:latest
+    ports:
+      - "1234:8005"
+    volumes:
+      - customhabit-data:/app
+    restart: unless-stopped
+
+volumes:
+  customhabit-data:
 ```
 
-Open a browser and go to `http://<your-pc-ip>:1234/` (e.g. `http://192.168.0.230:1234/`).
-
-SQLite creates itself on first run — no setup step. Data lives at `/app/database.db` inside the container.
-
-To keep habits across container restarts/upgrades, mount a volume:
+2. Start (or upgrade) the app:
 
 ```bash
-docker run -d -p 1234:8005 -v customhabit-data:/app willmarl/customhabit:latest
+docker compose pull && docker compose up -d
 ```
 
+3. Open `http://<your-pc-ip>:1234/` (e.g. `http://192.168.0.230:1234/`).
 
+SQLite is created on first run. The `customhabit-data` volume keeps `/app/database.db` across restarts and upgrades — no extra setup.
 
-
+To change the host port, edit the left side of `"1234:8005"` (container stays on `8005`).
 
 ## Tech stack
 
