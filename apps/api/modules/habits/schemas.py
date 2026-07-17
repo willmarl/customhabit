@@ -3,13 +3,18 @@ from enum import Enum
 import re
 from typing import Optional
 
-from sqlalchemy import Column, Text
+from sqlalchemy import Column, JSON, Text
 from sqlmodel import SQLModel, Field
 
 
 class HabitGroupType(str, Enum):
     core = "core"
     sub = "sub"
+
+
+class HabitType(str, Enum):
+    normal = "normal"
+    round_robin = "round_robin"
 
 
 class HabitGroup(SQLModel, table=True):
@@ -49,6 +54,12 @@ class Habit(SQLModel, table=True):
     duration_minutes: int = Field(default=60)
     once_per_day: bool = Field(default=False)
     retired_at: Optional[datetime] = None
+    habit_type: str = Field(default=HabitType.normal.value)
+    round_robin_items: list[str] = Field(
+        default_factory=list,
+        sa_column=Column(JSON, nullable=False, server_default="[]"),
+    )
+    round_robin_started_on: Optional[date] = None
 
 
 DURATION_SUFFIX_RE = re.compile(r"\s+(\d+)m\s*$", re.IGNORECASE)
@@ -100,6 +111,9 @@ class HabitRead(SQLModel):
     duration_minutes: int
     once_per_day: bool
     retired_at: Optional[datetime] = None
+    habit_type: str = HabitType.normal.value
+    round_robin_items: list[str] = Field(default_factory=list)
+    round_robin_started_on: Optional[date] = None
 
 
 class CompletionRead(SQLModel):
@@ -198,12 +212,16 @@ class CreateHabitRequest(SQLModel):
     name: str
     duration_minutes: Optional[int] = None
     once_per_day: Optional[bool] = None
+    habit_type: Optional[HabitType] = None
+    round_robin_items: Optional[list[str]] = None
 
 
 class UpdateHabitRequest(SQLModel):
     name: Optional[str] = None
     duration_minutes: Optional[int] = None
     once_per_day: Optional[bool] = None
+    habit_type: Optional[HabitType] = None
+    round_robin_items: Optional[list[str]] = None
 
 
 class ReorderHabitItem(SQLModel):

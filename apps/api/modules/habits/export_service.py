@@ -6,7 +6,8 @@ from sqlmodel import Session, select
 
 from lib.dates import resolve_habit_date
 from modules.settings.service import SettingsService
-from .schemas import DayRun, DayRunStatus, Habit, HabitSession
+from .round_robin import resolve_round_robin_item
+from .schemas import DayRun, DayRunStatus, Habit, HabitSession, HabitType
 from .stats_service import _get_stack_habit_ids
 
 
@@ -64,6 +65,14 @@ class ExportService:
                 and day_run.status == DayRunStatus.tap_out.value
             )
 
+            rr_item = None
+            if (habit.habit_type or HabitType.normal.value) == HabitType.round_robin.value:
+                rr_item = resolve_round_robin_item(
+                    habit.round_robin_items,
+                    habit.round_robin_started_on,
+                    session_row.session_date,
+                )
+
             row = {
                 "habit_name": habit.name,
                 "duration": session_row.duration_seconds,
@@ -81,6 +90,7 @@ class ExportService:
                 ),
                 "loop_index": session_row.loop_index,
                 "source": session_row.source,
+                "round_robin_item": rr_item,
             }
             lines.append(json.dumps(row, ensure_ascii=False))
 

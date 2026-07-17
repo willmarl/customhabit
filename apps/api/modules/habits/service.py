@@ -6,6 +6,7 @@ from sqlmodel import Session, select, delete
 from lib.dates import resolve_habit_date
 from modules.settings.service import SettingsService
 from .completion_logic import loops_after_toggle
+from .round_robin import normalize_round_robin_items
 from .schemas import DayRun, DayRunRead
 from .session_service import SessionService
 from .schemas import (
@@ -21,6 +22,7 @@ from .schemas import (
     HabitGroupRead,
     HabitGroupType,
     HabitRead,
+    HabitType,
     ReorderHabitsRequest,
     RetiredHabitRead,
     RetiredHabitsResponse,
@@ -221,6 +223,30 @@ class HabitService:
                 detail=f"duration_minutes must be at least {MIN_HABIT_MINUTES}",
             )
 
+    def _validate_round_robin_items(
+        self, items: list[str] | None, *, require_active: bool
+    ) -> list[str]:
+        raw = items or []
+        if len(raw) != len([x for x in raw if x.strip()]):
+            raise HTTPException(
+                status_code=400, detail="Round-robin members cannot be blank"
+            )
+        normalized = normalize_round_robin_items(raw)
+        if len(normalized) != len([x.strip() for x in raw if x.strip()]):
+            raise HTTPException(
+                status_code=400, detail="Round-robin members must be unique"
+            )
+        if require_active and len(normalized) < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="Round-robin habits need at least two members",
+            )
+        return normalized
+
+    def _habit_day_today(self) -> date:
+        settings = SettingsService(self.session).get()
+        return resolve_habit_date(day_start=settings.day_start_time)
+
     def create_habit(self, data: CreateHabitRequest) -> HabitRead:
         group = self.session.get(HabitGroup, data.group_id)
         if not group:
@@ -238,12 +264,30 @@ class HabitService:
         )
         self._validate_duration(duration)
 
+        habit_type = (
+            data.habit_type.value
+            if data.habit_type is not None
+            else HabitType.normal.value
+        )
+        items = self._validate_round_robin_items(
+            data.round_robin_items,
+            require_active=habit_type == HabitType.round_robin.value,
+        )
+        started_on = (
+            self._habit_day_today()
+            if habit_type == HabitType.round_robin.value
+            else None
+        )
+
         habit = Habit(
             group_id=data.group_id,
             name=name,
             sort_order=self._next_sort_order(data.group_id),
             duration_minutes=duration,
             once_per_day=data.once_per_day or False,
+            habit_type=habit_type,
+            round_robin_items=items,
+            round_robin_started_on=started_on,
         )
         self.session.add(habit)
         self.session.commit()
@@ -260,14 +304,54 @@ class HabitService:
                 sub_group.name = data.name.strip()
                 self.session.add(sub_group)
 
-        for key, value in data.model_dump(exclude_unset=True).items():
-            if key == "name" and value is not None:
-                setattr(habit, key, value.strip())
-            elif key == "duration_minutes" and value is not None:
-                self._validate_duration(value)
-                setattr(habit, key, value)
-            else:
-                setattr(habit, key, value)
+        payload = data.model_dump(exclude_unset=True)
+        prev_type = habit.habit_type or HabitType.normal.value
+        prev_items = list(habit.round_robin_items or [])
+
+        if "name" in payload and payload["name"] is not None:
+            habit.name = payload["name"].strip()
+        if "duration_minutes" in payload and payload["duration_minutes"] is not None:
+            self._validate_duration(payload["duration_minutes"])
+            habit.duration_minutes = payload["duration_minutes"]
+        if "once_per_day" in payload and payload["once_per_day"] is not None:
+            habit.once_per_day = payload["once_per_day"]
+
+        next_type = prev_type
+        if "habit_type" in payload and payload["habit_type"] is not None:
+            value = payload["habit_type"]
+            next_type = value.value if isinstance(value, HabitType) else value
+            habit.habit_type = next_type
+
+        items_changed = False
+        if "round_robin_items" in payload:
+            items = self._validate_round_robin_items(
+                payload["round_robin_items"],
+                require_active=next_type == HabitType.round_robin.value,
+            )
+            items_changed = items != prev_items
+            habit.round_robin_items = items
+        elif next_type == HabitType.round_robin.value:
+            # Ensure existing items still valid when enabling round-robin
+            habit.round_robin_items = self._validate_round_robin_items(
+                prev_items, require_active=True
+            )
+
+        converting_to_rr = (
+            prev_type != HabitType.round_robin.value
+            and next_type == HabitType.round_robin.value
+        )
+        converting_from_rr = (
+            prev_type == HabitType.round_robin.value
+            and next_type != HabitType.round_robin.value
+        )
+
+        if converting_from_rr:
+            # Keep member list; stop rotation
+            habit.round_robin_started_on = None
+        elif next_type == HabitType.round_robin.value and (
+            converting_to_rr or items_changed
+        ):
+            habit.round_robin_started_on = self._habit_day_today()
 
         self.session.add(habit)
         self.session.commit()

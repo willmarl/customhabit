@@ -22,6 +22,8 @@ export type HabitGroup = {
   color: string;
 };
 
+export type HabitType = "normal" | "round_robin";
+
 export type Habit = {
   id: number;
   group_id: number;
@@ -31,6 +33,9 @@ export type Habit = {
   duration_minutes: number;
   once_per_day: boolean;
   retired_at?: string | null;
+  habit_type?: HabitType;
+  round_robin_items?: string[];
+  round_robin_started_on?: string | null;
 };
 
 export type RetiredHabit = Habit & {
@@ -81,11 +86,15 @@ export type CreateHabitRequest = {
   name: string;
   duration_minutes?: number;
   once_per_day?: boolean;
+  habit_type?: HabitType;
+  round_robin_items?: string[];
 };
 export type UpdateHabitRequest = {
   name?: string;
   duration_minutes?: number;
   once_per_day?: boolean;
+  habit_type?: HabitType;
+  round_robin_items?: string[];
 };
 export type ReorderHabitItem = { id: number; sort_order: number };
 export type ToggleCompletionRequest = { habit_id: number; date: string };

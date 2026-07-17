@@ -3,11 +3,16 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { IconTooltipButton, IconTooltipWrap } from "@/components/ui/icon-tooltip";
 import { cn } from "@/lib/utils";
+import { getHabitDate } from "@/lib/dates";
 import type { Completion, Habit } from "../types";
 import { getLinkedCellState } from "../lib/linkedHabits";
 import { getCellProgress, getCompletion } from "../lib/completionUtils";
 import { getSubCategoryColor } from "../lib/subCategoryColors";
 import { formatDurationMinutes } from "../lib/dayEstimate";
+import {
+  isRoundRobinHabit,
+  resolveRoundRobinItem,
+} from "../lib/roundRobin";
 import TallyCell from "./TallyCell";
 
 type HabitRowProps = {
@@ -19,6 +24,7 @@ type HabitRowProps = {
   subGroupColors: Record<number, string>;
   subGroupNames: Record<number, string>;
   groupColorId?: string;
+  dayStartTime?: string;
   onToggle: (habitId: number, date: string) => void;
   onRename: (habit: Habit) => void;
   onLinkedClick?: (subGroupId: number) => void;
@@ -33,6 +39,7 @@ export default function HabitRow({
   subGroupColors,
   subGroupNames,
   groupColorId,
+  dayStartTime = "04:00",
   onToggle,
   onRename,
   onLinkedClick,
@@ -60,6 +67,11 @@ export default function HabitRow({
     : undefined;
   const groupColor = groupColorId ? getSubCategoryColor(groupColorId) : undefined;
   const label = String(index + 1).padStart(2, "0");
+  const isRoundRobin = isRoundRobinHabit(habit);
+  const today = getHabitDate(new Date(), dayStartTime);
+  const todayMember = isRoundRobin
+    ? resolveRoundRobinItem(habit, today)
+    : null;
 
   return (
     <div
@@ -111,6 +123,22 @@ export default function HabitRow({
             >
               {habit.name}
             </span>
+            {isRoundRobin ? (
+              <span
+                className="shrink-0 rounded bg-violet-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700 dark:bg-violet-500/20 dark:text-violet-400"
+                title="Cycles through member names each day"
+              >
+                round robin
+              </span>
+            ) : null}
+            {isRoundRobin && todayMember ? (
+              <span
+                className="min-w-0 truncate text-xs text-muted-foreground"
+                title={`Today: ${todayMember}`}
+              >
+                Today: {todayMember}
+              </span>
+            ) : null}
             {habit.once_per_day ? (
               <span
                 className="shrink-0 rounded bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700 dark:bg-sky-500/20 dark:text-sky-400"
@@ -177,12 +205,18 @@ export default function HabitRow({
             );
           }
 
+          const member = isRoundRobin
+            ? resolveRoundRobinItem(habit, dateStr)
+            : null;
+
           return (
             <TallyCell
               key={dateStr}
               progress={getCellProgress(getCompletion(completions, habit.id, dateStr))}
               accentColor={groupColor}
               accentTone="full"
+              tooltip={member ? `Round robin: ${member}` : undefined}
+              tooltipSide={member ? "left" : undefined}
               onToggle={() => onToggle(habit.id, dateStr)}
             />
           );

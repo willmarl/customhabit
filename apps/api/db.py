@@ -116,6 +116,24 @@ def migrate_schema() -> None:
             "retired_at",
             "ALTER TABLE habit ADD COLUMN retired_at TEXT",
         )
+        _add_column_if_missing(
+            conn,
+            "habit",
+            "habit_type",
+            "ALTER TABLE habit ADD COLUMN habit_type TEXT NOT NULL DEFAULT 'normal'",
+        )
+        _add_column_if_missing(
+            conn,
+            "habit",
+            "round_robin_items",
+            "ALTER TABLE habit ADD COLUMN round_robin_items TEXT NOT NULL DEFAULT '[]'",
+        )
+        _add_column_if_missing(
+            conn,
+            "habit",
+            "round_robin_started_on",
+            "ALTER TABLE habit ADD COLUMN round_robin_started_on TEXT",
+        )
 
 
 def migrate_habit_duration_suffixes() -> None:

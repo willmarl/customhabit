@@ -41,6 +41,24 @@ function HabitLine({
       >
         {habit.name}
       </span>
+      {habit.habit_type === "round_robin" && !isLinked && (
+        <span
+          className="shrink-0 rounded bg-violet-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700 dark:bg-violet-500/20 dark:text-violet-400"
+          title={(habit.round_robin_items ?? []).join(" → ")}
+        >
+          round robin
+        </span>
+      )}
+      {habit.habit_type === "round_robin" &&
+        !isLinked &&
+        (habit.round_robin_items?.length ?? 0) > 0 && (
+          <span
+            className="min-w-0 max-w-[10rem] truncate text-xs text-muted-foreground"
+            title={(habit.round_robin_items ?? []).join(" → ")}
+          >
+            {(habit.round_robin_items ?? []).join(" · ")}
+          </span>
+        )}
       {habit.once_per_day && !isLinked && (
         <span className="shrink-0 rounded bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700 dark:bg-sky-500/20 dark:text-sky-400">
           once daily

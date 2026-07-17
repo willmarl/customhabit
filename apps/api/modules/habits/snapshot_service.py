@@ -173,6 +173,9 @@ class SnapshotService:
                         duration_minutes=h.duration_minutes,
                         once_per_day=h.once_per_day,
                         retired_at=h.retired_at,
+                        habit_type=h.habit_type,
+                        round_robin_items=list(h.round_robin_items or []),
+                        round_robin_started_on=h.round_robin_started_on,
                     )
                 )
 
@@ -192,6 +195,9 @@ class SnapshotService:
                     duration_minutes=h.duration_minutes,
                     once_per_day=h.once_per_day,
                     retired_at=h.retired_at,
+                    habit_type=h.habit_type,
+                    round_robin_items=list(h.round_robin_items or []),
+                    round_robin_started_on=h.round_robin_started_on,
                 )
             )
 

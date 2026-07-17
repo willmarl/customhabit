@@ -105,6 +105,7 @@ export default function HabitTable({
                     subGroupColors={subGroupColors}
                     subGroupNames={subGroupNames}
                     groupColorId={groupColorId}
+                    dayStartTime={dayStartTime}
                     onToggle={(habitId, date) =>
                       onToggle({ habit_id: habitId, date })
                     }
