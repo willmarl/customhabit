@@ -37,7 +37,15 @@ browser → :8005
 
 Have [Docker](https://docs.docker.com/get-docker/) installed (Compose V2 included).
 
-1. Create a folder and put this `docker-compose.yml` in it:
+1. Create a folder and an empty database file:
+
+```bash
+mkdir -p ~/docker/customhabit
+cd ~/docker/customhabit
+touch database.db
+```
+
+2. Put this `docker-compose.yml` in the same folder:
 
 ```yaml
 services:
@@ -46,22 +54,21 @@ services:
     ports:
       - "1234:8005"
     volumes:
-      - customhabit-data:/app
+      - ./database.db:/app/database.db
     restart: unless-stopped
-
-volumes:
-  customhabit-data:
 ```
 
-2. Start (or upgrade) the app:
+3. Start (or upgrade) the app:
 
 ```bash
 docker compose pull && docker compose up -d
 ```
 
-3. Open `http://<your-pc-ip>:1234/` (e.g. `http://192.168.0.230:1234/`).
+4. Open `http://<your-pc-ip>:1234/` (e.g. `http://192.168.0.230:1234/`).
 
-SQLite is created on first run. The `customhabit-data` volume keeps `/app/database.db` across restarts and upgrades — no extra setup.
+SQLite initializes `database.db` on first run. Keeping that file beside the Compose
+file preserves your habits across container restarts and image upgrades. Back it up
+like any other important file.
 
 To change the host port, edit the left side of `"1234:8005"` (container stays on `8005`).
 
