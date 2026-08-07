@@ -168,6 +168,20 @@ class HabitService:
         if data.name is not None and group.type == HabitGroupType.core:
             raise HTTPException(status_code=400, detail="Cannot rename core group")
 
+        if data.name is not None and group.type == HabitGroupType.sub:
+            stripped = data.name.strip()
+            if not stripped:
+                raise HTTPException(status_code=400, detail="Name is required")
+            existing = self.session.exec(
+                select(HabitGroup).where(
+                    HabitGroup.type == HabitGroupType.sub,
+                    HabitGroup.name == stripped,
+                    HabitGroup.id != group_id,
+                )
+            ).first()
+            if existing:
+                raise HTTPException(status_code=409, detail="Sub-category already exists")
+
         if data.color is not None:
             if group.type != HabitGroupType.sub:
                 raise HTTPException(status_code=400, detail="Only sub-categories can have colors")
@@ -175,7 +189,13 @@ class HabitService:
                 raise HTTPException(status_code=400, detail="Invalid color")
 
         for key, value in data.model_dump(exclude_unset=True).items():
-            setattr(group, key, value)
+            if key == "name" and value is not None:
+                stripped = value.strip()
+                if not stripped:
+                    raise HTTPException(status_code=400, detail="Name is required")
+                setattr(group, key, stripped)
+            else:
+                setattr(group, key, value)
         self.session.add(group)
 
         if data.name is not None and group.type == HabitGroupType.sub:
@@ -183,7 +203,7 @@ class HabitService:
                 select(Habit).where(Habit.linked_sub_group_id == group.id)
             ).first()
             if linked:
-                linked.name = data.name.strip()
+                linked.name = group.name
                 self.session.add(linked)
 
         self.session.commit()
