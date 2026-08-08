@@ -266,3 +266,12 @@ code {
     cursor: pointer;}
   html {
     @apply font-sans;}}
+
+@keyframes break-timer-deplete {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}

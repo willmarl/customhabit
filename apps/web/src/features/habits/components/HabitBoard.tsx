@@ -7,12 +7,18 @@ import { cn } from "@/lib/utils";
 import { getHabitDate } from "@/lib/dates";
 import { useModal } from "@/components/providers/ModalProvider";
 import { useBoard, useToggleCompletion } from "../hooks";
+import { usePostHabitBreak } from "../hooks/usePostHabitBreak";
 import type { ToggleCompletionRequest } from "../types";
-import { allStackHabitsDone } from "../lib/completionUtils";
+import {
+  allStackHabitsDone,
+  getCompletion,
+  isCompletionDone,
+} from "../lib/completionUtils";
 import HabitGroupSection from "./HabitGroupSection";
 import CreateSubCategoryDialog from "./CreateSubCategoryDialog";
 import DayEstimateBar from "./DayEstimateBar";
 import DayModeBar from "./DayModeBar";
+import BreakOfferBar from "./BreakOfferBar";
 import RetiredHabitsPanel from "./RetiredHabitsPanel";
 
 export default function HabitBoard() {
@@ -21,12 +27,40 @@ export default function HabitBoard() {
   const { openModal, closeModal } = useModal();
   const confettiFired = useRef(false);
   const today = getHabitDate(new Date(), board?.settings.day_start_time);
+  const breakMinutes = board?.settings.break_minutes ?? 0;
+  const {
+    state: breakState,
+    offer: offerBreak,
+    accept: acceptBreak,
+    decline: declineBreak,
+    endEarly: endBreakEarly,
+    dismiss: dismissBreak,
+  } = usePostHabitBreak(breakMinutes);
 
   const handleToggle = useCallback(
     (data: ToggleCompletionRequest) => {
-      toggleCompletion(data);
+      if (!board) {
+        toggleCompletion(data);
+        return;
+      }
+      const before = getCompletion(board.completions, data.habit_id, data.date);
+      const wasDone = isCompletionDone(before);
+      toggleCompletion(data, {
+        onSuccess: (result) => {
+          if (
+            result &&
+            isCompletionDone(result) &&
+            !wasDone &&
+            data.date === today &&
+            board.settings.break_minutes > 0 &&
+            board.day_run?.status !== "tap_out"
+          ) {
+            offerBreak();
+          }
+        },
+      });
     },
-    [toggleCompletion],
+    [board, today, toggleCompletion, offerBreak],
   );
 
   const completions = board?.completions ?? [];
@@ -113,7 +147,17 @@ export default function HabitBoard() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-6 py-8 text-left">
       <DayModeBar board={board} />
-      <DayEstimateBar board={board} completions={completions} />
+      <div className="space-y-2">
+        <DayEstimateBar board={board} completions={completions} />
+        <BreakOfferBar
+          breakMinutes={breakMinutes}
+          state={breakState}
+          onAccept={acceptBreak}
+          onDecline={declineBreak}
+          onEndEarly={endBreakEarly}
+          onDismiss={dismissBreak}
+        />
+      </div>
 
       <HabitGroupSection
         group={board.core_group}
