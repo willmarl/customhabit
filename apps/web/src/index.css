@@ -275,3 +275,37 @@ code {
     transform: scaleX(0);
   }
 }
+
+/* Hexagon focus timer: quick ~30° turn, pause, repeat (mechanical tick). */
+@keyframes habit-timer-hex-tick {
+  0% { transform: rotate(0deg); }
+  2.5% { transform: rotate(30deg); }
+  8.333% { transform: rotate(30deg); }
+  10.833% { transform: rotate(60deg); }
+  16.666% { transform: rotate(60deg); }
+  19.166% { transform: rotate(90deg); }
+  25% { transform: rotate(90deg); }
+  27.5% { transform: rotate(120deg); }
+  33.333% { transform: rotate(120deg); }
+  35.833% { transform: rotate(150deg); }
+  41.666% { transform: rotate(150deg); }
+  44.166% { transform: rotate(180deg); }
+  50% { transform: rotate(180deg); }
+  52.5% { transform: rotate(210deg); }
+  58.333% { transform: rotate(210deg); }
+  60.833% { transform: rotate(240deg); }
+  66.666% { transform: rotate(240deg); }
+  69.166% { transform: rotate(270deg); }
+  75% { transform: rotate(270deg); }
+  77.5% { transform: rotate(300deg); }
+  83.333% { transform: rotate(300deg); }
+  85.833% { transform: rotate(330deg); }
+  91.666% { transform: rotate(330deg); }
+  94.166% { transform: rotate(360deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.habit-timer-hex-tick {
+  animation: habit-timer-hex-tick 9.6s linear infinite;
+  transform-origin: center;
+}

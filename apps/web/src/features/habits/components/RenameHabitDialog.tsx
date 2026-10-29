@@ -157,6 +157,9 @@ export default function RenameHabitDialog({
 }: RenameHabitDialogProps) {
   const [name, setName] = useState(habit.name);
   const [duration, setDuration] = useState(String(habit.duration_minutes));
+  const [buffer, setBuffer] = useState(
+    String(habit.buffer_minutes ?? 0),
+  );
   const [oncePerDay, setOncePerDay] = useState(habit.once_per_day);
   const [habitType, setHabitType] = useState<HabitType>(
     habit.habit_type ?? "normal",
@@ -191,10 +194,23 @@ export default function RenameHabitDialog({
     const parsedDuration = parseInt(duration, 10);
     if (Number.isNaN(parsedDuration) || parsedDuration < 1) return;
 
+    const parsedBuffer = parseInt(buffer, 10);
+    if (
+      Number.isNaN(parsedBuffer) ||
+      parsedBuffer < 0 ||
+      parsedBuffer >= parsedDuration
+    ) {
+      setError("Buffer must be ≥ 0 and less than duration");
+      return;
+    }
+
     const data: UpdateHabitRequest = {};
     if (trimmed !== habit.name) data.name = trimmed;
     if (parsedDuration !== habit.duration_minutes) {
       data.duration_minutes = parsedDuration;
+    }
+    if (parsedBuffer !== (habit.buffer_minutes ?? 0)) {
+      data.buffer_minutes = parsedBuffer;
     }
     if (oncePerDay !== habit.once_per_day) data.once_per_day = oncePerDay;
 
@@ -260,6 +276,25 @@ export default function RenameHabitDialog({
                 onChange={(e) => setDuration(e.target.value)}
                 className="tabular-nums"
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="habit-buffer">Buffer (minutes)</Label>
+              <Input
+                id="habit-buffer"
+                type="number"
+                min={0}
+                value={buffer}
+                onChange={(e) => {
+                  setBuffer(e.target.value);
+                  setError(null);
+                }}
+                className="tabular-nums"
+              />
+              <p className="text-xs text-muted-foreground">
+                Ring this many minutes before your planned duration so you get a
+                heads-up while finishing a step — not mid-problem. Timer keeps
+                running. Example: 20 min duration + 5 min buffer rings at 15:00.
+              </p>
             </div>
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <Checkbox

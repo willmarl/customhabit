@@ -22,6 +22,13 @@ type HabitGroupSectionProps = {
   onToggle: (data: ToggleCompletionRequest) => void;
   isCore?: boolean;
   onLinkedClick?: (subGroupId: number) => void;
+  activeHabitId?: number | null;
+  activeStartedAt?: string | null;
+  previousDurations?: Record<string, number>;
+  onStartTimer?: (habitId: number) => void;
+  onFinishTimer?: () => void;
+  onDiscardTimer?: () => void;
+  timerBusy?: boolean;
 };
 
 export default function HabitGroupSection({
@@ -32,6 +39,13 @@ export default function HabitGroupSection({
   onToggle,
   isCore = false,
   onLinkedClick,
+  activeHabitId = null,
+  activeStartedAt = null,
+  previousDurations,
+  onStartTimer,
+  onFinishTimer,
+  onDiscardTimer,
+  timerBusy = false,
 }: HabitGroupSectionProps) {
   const { openModal, closeModal } = useModal();
   const { mutate: updateGroup, isPending: isRenaming } = useUpdateGroup();
@@ -202,6 +216,13 @@ export default function HabitGroupSection({
         subGroupColors={subGroupColors}
         onToggle={onToggle}
         onLinkedClick={onLinkedClick}
+        activeHabitId={activeHabitId}
+        activeStartedAt={activeStartedAt}
+        previousDurations={previousDurations}
+        onStartTimer={onStartTimer}
+        onFinishTimer={onFinishTimer}
+        onDiscardTimer={onDiscardTimer}
+        timerBusy={timerBusy}
       />
 
       <NotesEditor groupId={group.id} notes={group.notes} />

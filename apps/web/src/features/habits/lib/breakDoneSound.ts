@@ -1,5 +1,6 @@
 let audioCtx: AudioContext | null = null;
 let ringTimer: ReturnType<typeof setTimeout> | null = null;
+let stopAtTimer: ReturnType<typeof setTimeout> | null = null;
 let ringing = false;
 
 function getAudioContext(): AudioContext | null {
@@ -13,7 +14,7 @@ function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
-/** Resume AudioContext after a user gesture (Start break). */
+/** Resume AudioContext after a user gesture (Start break / timer). */
 export function unlockBreakAudio() {
   const ctx = getAudioContext();
   if (ctx?.state === "suspended") void ctx.resume();
@@ -49,16 +50,7 @@ function playOneCycle(ctx: AudioContext) {
 
 const CYCLE_MS = 2_400;
 
-/**
- * Alarm-style double ring that loops until stopBreakDoneRing().
- */
-export function startBreakDoneRing() {
-  const ctx = getAudioContext();
-  if (!ctx) return;
-
-  stopBreakDoneRing();
-  ringing = true;
-
+function beginRingLoop(ctx: AudioContext) {
   const tick = () => {
     if (!ringing) return;
     playOneCycle(ctx);
@@ -77,10 +69,45 @@ export function startBreakDoneRing() {
   }
 }
 
+/**
+ * Alarm-style double ring that loops until stopBreakDoneRing().
+ */
+export function startBreakDoneRing() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  stopBreakDoneRing();
+  ringing = true;
+  beginRingLoop(ctx);
+}
+
+/**
+ * Same alarm as break-done, but auto-silences after maxMs (AFK-safe).
+ */
+export function startTimedRing(maxMs = 30_000) {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  stopBreakDoneRing();
+  ringing = true;
+  beginRingLoop(ctx);
+  stopAtTimer = window.setTimeout(() => {
+    stopBreakDoneRing();
+  }, maxMs);
+}
+
 export function stopBreakDoneRing() {
   ringing = false;
   if (ringTimer != null) {
     window.clearTimeout(ringTimer);
     ringTimer = null;
   }
+  if (stopAtTimer != null) {
+    window.clearTimeout(stopAtTimer);
+    stopAtTimer = null;
+  }
+}
+
+export function isRinging() {
+  return ringing;
 }

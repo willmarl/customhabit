@@ -64,6 +64,30 @@ class SessionService:
                 breaks.append(gap)
         return breaks
 
+    def _previous_timer_durations(
+        self, exclude_session_id: int | None = None
+    ) -> dict[int, int]:
+        """Latest ended timer-sourced duration per habit (for LiveSplit deltas)."""
+        rows = list(
+            self.session.exec(
+                select(HabitSession)
+                .where(HabitSession.source == SessionSource.timer.value)
+                .where(HabitSession.ended_at.isnot(None))
+                .where(HabitSession.duration_seconds.isnot(None))
+                .order_by(HabitSession.ended_at.desc())
+            ).all()
+        )
+        previous: dict[int, int] = {}
+        for row in rows:
+            if exclude_session_id is not None and row.id == exclude_session_id:
+                continue
+            if row.habit_id in previous:
+                continue
+            if row.duration_seconds is None:
+                continue
+            previous[row.habit_id] = row.duration_seconds
+        return previous
+
     def get_day_activity(self, run_date: date | None = None) -> DayActivityResponse:
         d = self._resolve_date(run_date)
         sessions = list(
@@ -80,6 +104,9 @@ class SessionService:
             sessions=[HabitSessionRead.from_row(s) for s in sessions],
             active_session=HabitSessionRead.from_row(active) if active else None,
             break_seconds=self._compute_breaks(sessions),
+            previous_durations=self._previous_timer_durations(
+                exclude_session_id=active.id if active else None
+            ),
         )
 
     def start_session(self, data: StartSessionRequest) -> HabitSessionRead:

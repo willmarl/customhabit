@@ -19,6 +19,7 @@ import { useReorderHabits } from "../hooks";
 import AddHabitInline from "./AddHabitInline";
 import DateGridHeader from "./DateGridHeader";
 import HabitRow from "./HabitRow";
+import { HABIT_TIMER_COLUMN_CLASS } from "./HabitTimerControl";
 import RenameHabitDialog from "./RenameHabitDialog";
 
 type HabitTableProps = {
@@ -32,6 +33,13 @@ type HabitTableProps = {
   subGroupNames: Record<number, string>;
   onToggle: (data: ToggleCompletionRequest) => void;
   onLinkedClick?: (subGroupId: number) => void;
+  activeHabitId?: number | null;
+  activeStartedAt?: string | null;
+  previousDurations?: Record<string, number>;
+  onStartTimer?: (habitId: number) => void;
+  onFinishTimer?: () => void;
+  onDiscardTimer?: () => void;
+  timerBusy?: boolean;
 };
 
 export default function HabitTable({
@@ -45,6 +53,13 @@ export default function HabitTable({
   subGroupNames,
   onToggle,
   onLinkedClick,
+  activeHabitId = null,
+  activeStartedAt = null,
+  previousDurations,
+  onStartTimer,
+  onFinishTimer,
+  onDiscardTimer,
+  timerBusy = false,
 }: HabitTableProps) {
   const dates = getVisibleDates(lookbackDays, dayStartTime);
   const { mutate: reorder } = useReorderHabits();
@@ -82,6 +97,8 @@ export default function HabitTable({
         <div className="min-w-fit">
           <div className="flex items-end justify-end gap-0.5 pb-2 pl-[calc(1rem+1.5rem+1.5rem+0.375rem)]">
             <DateGridHeader dates={dates} />
+            {/* Spacer matches HabitTimerControl column width */}
+            <div className={`${HABIT_TIMER_COLUMN_CLASS} shrink-0 pl-1`} aria-hidden />
           </div>
 
           {sorted.length > 0 && (
@@ -111,6 +128,13 @@ export default function HabitTable({
                     }
                     onRename={setRenaming}
                     onLinkedClick={onLinkedClick}
+                    activeHabitId={activeHabitId}
+                    activeStartedAt={activeStartedAt}
+                    previousDurations={previousDurations}
+                    onStartTimer={onStartTimer}
+                    onFinishTimer={onFinishTimer}
+                    onDiscardTimer={onDiscardTimer}
+                    timerBusy={timerBusy}
                   />
                 ))}
               </SortableContext>

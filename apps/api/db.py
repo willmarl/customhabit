@@ -134,6 +134,25 @@ def migrate_schema() -> None:
             "round_robin_started_on",
             "ALTER TABLE habit ADD COLUMN round_robin_started_on TEXT",
         )
+        _add_column_if_missing(
+            conn,
+            "habit",
+            "buffer_minutes",
+            "ALTER TABLE habit ADD COLUMN buffer_minutes INTEGER NOT NULL DEFAULT 0",
+        )
+        # Migrate from short-lived ring_early_minutes name if present
+        cols = {
+            row[1]
+            for row in conn.execute(text("PRAGMA table_info(habit)")).fetchall()
+        }
+        if "ring_early_minutes" in cols and "buffer_minutes" in cols:
+            conn.execute(
+                text(
+                    "UPDATE habit SET buffer_minutes = ring_early_minutes "
+                    "WHERE buffer_minutes = 0 AND ring_early_minutes != 0"
+                )
+            )
+            conn.commit()
 
 
 def migrate_habit_duration_suffixes() -> None:

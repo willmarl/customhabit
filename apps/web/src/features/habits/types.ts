@@ -31,6 +31,7 @@ export type Habit = {
   sort_order: number;
   linked_sub_group_id: number | null;
   duration_minutes: number;
+  buffer_minutes?: number;
   once_per_day: boolean;
   retired_at?: string | null;
   habit_type?: HabitType;
@@ -85,6 +86,7 @@ export type CreateHabitRequest = {
   group_id: number;
   name: string;
   duration_minutes?: number;
+  buffer_minutes?: number;
   once_per_day?: boolean;
   habit_type?: HabitType;
   round_robin_items?: string[];
@@ -92,6 +94,7 @@ export type CreateHabitRequest = {
 export type UpdateHabitRequest = {
   name?: string;
   duration_minutes?: number;
+  buffer_minutes?: number;
   once_per_day?: boolean;
   habit_type?: HabitType;
   round_robin_items?: string[];
@@ -117,6 +120,8 @@ export type DayActivity = {
   sessions: HabitSession[];
   active_session: HabitSession | null;
   break_seconds: number[];
+  /** habit_id -> previous timer duration_seconds (JSON keys may be strings) */
+  previous_durations?: Record<string, number>;
 };
 
 export type StartSessionRequest = {

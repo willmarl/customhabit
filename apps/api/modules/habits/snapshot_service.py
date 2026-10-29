@@ -156,6 +156,9 @@ class SnapshotService:
                 sort_order=linked_src.sort_order if linked_src else sg.sort_order,
                 linked_sub_group_id=new_group.id,
                 duration_minutes=linked_src.duration_minutes if linked_src else 60,
+                buffer_minutes=(
+                    linked_src.buffer_minutes if linked_src else 0
+                ),
                 once_per_day=linked_src.once_per_day if linked_src else False,
                 retired_at=linked_src.retired_at if linked_src else None,
             )
@@ -171,6 +174,7 @@ class SnapshotService:
                         name=h.name,
                         sort_order=h.sort_order,
                         duration_minutes=h.duration_minutes,
+                        buffer_minutes=h.buffer_minutes or 0,
                         once_per_day=h.once_per_day,
                         retired_at=h.retired_at,
                         habit_type=h.habit_type,
@@ -193,6 +197,7 @@ class SnapshotService:
                     name=h.name,
                     sort_order=h.sort_order,
                     duration_minutes=h.duration_minutes,
+                    buffer_minutes=h.buffer_minutes or 0,
                     once_per_day=h.once_per_day,
                     retired_at=h.retired_at,
                     habit_type=h.habit_type,

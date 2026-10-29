@@ -6,7 +6,11 @@ import { cn } from "@/lib/utils";
 import { getHabitDate } from "@/lib/dates";
 import type { Completion, Habit } from "../types";
 import { getLinkedCellState } from "../lib/linkedHabits";
-import { getCellProgress, getCompletion } from "../lib/completionUtils";
+import {
+  getCellProgress,
+  getCompletion,
+  isCompletionDone,
+} from "../lib/completionUtils";
 import { getSubCategoryColor } from "../lib/subCategoryColors";
 import { formatDurationMinutes } from "../lib/dayEstimate";
 import {
@@ -14,6 +18,7 @@ import {
   resolveRoundRobinItem,
 } from "../lib/roundRobin";
 import TallyCell from "./TallyCell";
+import HabitTimerControl, { HABIT_TIMER_COLUMN_CLASS } from "./HabitTimerControl";
 
 type HabitRowProps = {
   habit: Habit;
@@ -28,6 +33,13 @@ type HabitRowProps = {
   onToggle: (habitId: number, date: string) => void;
   onRename: (habit: Habit) => void;
   onLinkedClick?: (subGroupId: number) => void;
+  activeHabitId?: number | null;
+  activeStartedAt?: string | null;
+  previousDurations?: Record<string, number>;
+  onStartTimer?: (habitId: number) => void;
+  onFinishTimer?: () => void;
+  onDiscardTimer?: () => void;
+  timerBusy?: boolean;
 };
 
 export default function HabitRow({
@@ -43,6 +55,13 @@ export default function HabitRow({
   onToggle,
   onRename,
   onLinkedClick,
+  activeHabitId = null,
+  activeStartedAt = null,
+  previousDurations,
+  onStartTimer,
+  onFinishTimer,
+  onDiscardTimer,
+  timerBusy = false,
 }: HabitRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: habit.id });
@@ -72,6 +91,12 @@ export default function HabitRow({
   const todayMember = isRoundRobin
     ? resolveRoundRobinItem(habit, today)
     : null;
+  const isTiming = activeHabitId === habit.id;
+  const otherTiming = activeHabitId != null && !isTiming;
+  const habitDoneToday = isCompletionDone(
+    getCompletion(completions, habit.id, today),
+  );
+  const showTimer = !isLinked && onStartTimer && onFinishTimer && onDiscardTimer;
 
   return (
     <div
@@ -80,6 +105,7 @@ export default function HabitRow({
       className={cn(
         "flex items-center gap-2 border-b border-border/70 py-1.5 last:border-b-0",
         isDragging && "relative z-10 bg-background opacity-90 shadow-sm",
+        isTiming && "bg-muted/40",
       )}
     >
       <IconTooltipWrap tooltip="Drag to reorder">
@@ -170,7 +196,7 @@ export default function HabitRow({
         </IconTooltipButton>
       </div>
 
-      <div className="flex gap-0.5">
+      <div className="flex items-center gap-0.5">
         {dates.map((dateStr) => {
           const linkedState = getLinkedCellState(
             habit,
@@ -221,6 +247,25 @@ export default function HabitRow({
             />
           );
         })}
+
+        {showTimer ? (
+          <HabitTimerControl
+            key={isTiming && activeStartedAt ? `run-${activeStartedAt}` : `idle-${habit.id}`}
+            habit={habit}
+            isTiming={isTiming}
+            otherTiming={otherTiming}
+            habitDone={habitDoneToday}
+            startedAt={isTiming ? activeStartedAt : null}
+            previousDurations={previousDurations}
+            disabled={timerBusy}
+            onStart={() => onStartTimer(habit.id)}
+            onFinish={onFinishTimer}
+            onDiscard={onDiscardTimer}
+          />
+        ) : (
+          // Keep row alignment when linked rows omit the timer column
+          <div className={`${HABIT_TIMER_COLUMN_CLASS} shrink-0 pl-1`} aria-hidden />
+        )}
       </div>
     </div>
   );

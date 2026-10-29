@@ -18,6 +18,9 @@ type ManageHabitsDialogProps = {
 function ManageHabitRow({ habit }: { habit: Habit }) {
   const [name, setName] = useState(habit.name);
   const [duration, setDuration] = useState(String(habit.duration_minutes));
+  const [buffer, setBuffer] = useState(
+    String(habit.buffer_minutes ?? 0),
+  );
   const [oncePerDay, setOncePerDay] = useState(habit.once_per_day);
   const { openModal } = useModal();
   const { mutate: updateHabit } = useUpdateHabit();
@@ -27,8 +30,15 @@ function ManageHabitRow({ habit }: { habit: Habit }) {
   useEffect(() => {
     setName(habit.name);
     setDuration(String(habit.duration_minutes));
+    setBuffer(String(habit.buffer_minutes ?? 0));
     setOncePerDay(habit.once_per_day);
-  }, [habit.id, habit.name, habit.duration_minutes, habit.once_per_day]);
+  }, [
+    habit.id,
+    habit.name,
+    habit.duration_minutes,
+    habit.buffer_minutes,
+    habit.once_per_day,
+  ]);
 
   const saveName = () => {
     const trimmed = name.trim();
@@ -47,8 +57,33 @@ function ManageHabitRow({ habit }: { habit: Habit }) {
       setDuration(String(habit.duration_minutes));
       return;
     }
+    const currentBuffer = habit.buffer_minutes ?? 0;
     if (parsed !== habit.duration_minutes) {
-      updateHabit({ id: habit.id, data: { duration_minutes: parsed } });
+      const data: { duration_minutes: number; buffer_minutes?: number } = {
+        duration_minutes: parsed,
+      };
+      // Clamp buffer if duration shrinks below it
+      if (currentBuffer >= parsed) {
+        data.buffer_minutes = Math.max(0, parsed - 1);
+        setBuffer(String(data.buffer_minutes));
+      }
+      updateHabit({ id: habit.id, data });
+    }
+  };
+
+  const saveBuffer = () => {
+    const parsed = parseInt(buffer, 10);
+    const durationMins = habit.duration_minutes;
+    if (
+      Number.isNaN(parsed) ||
+      parsed < 0 ||
+      parsed >= durationMins
+    ) {
+      setBuffer(String(habit.buffer_minutes ?? 0));
+      return;
+    }
+    if (parsed !== (habit.buffer_minutes ?? 0)) {
+      updateHabit({ id: habit.id, data: { buffer_minutes: parsed } });
     }
   };
 
@@ -122,6 +157,24 @@ function ManageHabitRow({ habit }: { habit: Habit }) {
             onChange={(e) => setDuration(e.target.value)}
             onBlur={saveDuration}
             className="h-7 w-16 text-xs tabular-nums"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Label
+            htmlFor={`buffer-${habit.id}`}
+            className="text-xs text-muted-foreground"
+            title="Minutes before duration to ring — wrap-up heads-up; timer keeps going"
+          >
+            Buffer
+          </Label>
+          <Input
+            id={`buffer-${habit.id}`}
+            type="number"
+            min={0}
+            value={buffer}
+            onChange={(e) => setBuffer(e.target.value)}
+            onBlur={saveBuffer}
+            className="h-7 w-14 text-xs tabular-nums"
           />
         </div>
         <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">

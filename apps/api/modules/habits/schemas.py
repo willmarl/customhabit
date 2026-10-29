@@ -52,6 +52,7 @@ class Habit(SQLModel, table=True):
     sort_order: int = 0
     linked_sub_group_id: Optional[int] = Field(default=None, foreign_key="habitgroup.id")
     duration_minutes: int = Field(default=60)
+    buffer_minutes: int = Field(default=0)
     once_per_day: bool = Field(default=False)
     retired_at: Optional[datetime] = None
     habit_type: str = Field(default=HabitType.normal.value)
@@ -109,6 +110,7 @@ class HabitRead(SQLModel):
     sort_order: int
     linked_sub_group_id: Optional[int] = None
     duration_minutes: int
+    buffer_minutes: int = 0
     once_per_day: bool
     retired_at: Optional[datetime] = None
     habit_type: str = HabitType.normal.value
@@ -211,6 +213,7 @@ class CreateHabitRequest(SQLModel):
     group_id: int
     name: str
     duration_minutes: Optional[int] = None
+    buffer_minutes: Optional[int] = None
     once_per_day: Optional[bool] = None
     habit_type: Optional[HabitType] = None
     round_robin_items: Optional[list[str]] = None
@@ -219,6 +222,7 @@ class CreateHabitRequest(SQLModel):
 class UpdateHabitRequest(SQLModel):
     name: Optional[str] = None
     duration_minutes: Optional[int] = None
+    buffer_minutes: Optional[int] = None
     once_per_day: Optional[bool] = None
     habit_type: Optional[HabitType] = None
     round_robin_items: Optional[list[str]] = None
@@ -353,6 +357,8 @@ class DayActivityResponse(SQLModel):
     sessions: list[HabitSessionRead]
     active_session: Optional[HabitSessionRead] = None
     break_seconds: list[int]
+    # habit_id -> duration_seconds of latest ended timer session (excl. active)
+    previous_durations: dict[int, int] = Field(default_factory=dict)
 
 
 from modules.settings.schemas import AppSettingsRead  # noqa: E402

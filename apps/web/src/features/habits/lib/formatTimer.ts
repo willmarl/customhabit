@@ -9,6 +9,16 @@ export function formatElapsedSeconds(totalSeconds: number): string {
   return `${m}:${String(sec).padStart(2, "0")}`;
 }
 
+/** LiveSplit-style clock: M:SS.cc (centiseconds). */
+export function formatSplitClock(totalSeconds: number): string {
+  const s = Math.max(0, totalSeconds);
+  const whole = Math.floor(s);
+  const centis = Math.floor((s - whole) * 100);
+  const m = Math.floor(whole / 60);
+  const sec = whole % 60;
+  return `${m}:${String(sec).padStart(2, "0")}.${String(centis).padStart(2, "0")}`;
+}
+
 export function elapsedSince(isoStart: string, nowMs = Date.now()): number {
   return Math.max(0, (nowMs - new Date(isoStart).getTime()) / 1000);
 }

@@ -243,6 +243,18 @@ class HabitService:
                 detail=f"duration_minutes must be at least {MIN_HABIT_MINUTES}",
             )
 
+    def _validate_buffer(self, buffer: int, duration: int) -> None:
+        if buffer < 0:
+            raise HTTPException(
+                status_code=400,
+                detail="buffer_minutes must be >= 0",
+            )
+        if buffer >= duration:
+            raise HTTPException(
+                status_code=400,
+                detail="buffer_minutes must be less than duration_minutes",
+            )
+
     def _validate_round_robin_items(
         self, items: list[str] | None, *, require_active: bool
     ) -> list[str]:
@@ -283,6 +295,8 @@ class HabitService:
             else settings.default_habit_minutes
         )
         self._validate_duration(duration)
+        buffer = data.buffer_minutes if data.buffer_minutes is not None else 0
+        self._validate_buffer(buffer, duration)
 
         habit_type = (
             data.habit_type.value
@@ -304,6 +318,7 @@ class HabitService:
             name=name,
             sort_order=self._next_sort_order(data.group_id),
             duration_minutes=duration,
+            buffer_minutes=buffer,
             once_per_day=data.once_per_day or False,
             habit_type=habit_type,
             round_robin_items=items,
@@ -333,8 +348,20 @@ class HabitService:
         if "duration_minutes" in payload and payload["duration_minutes"] is not None:
             self._validate_duration(payload["duration_minutes"])
             habit.duration_minutes = payload["duration_minutes"]
+        if "buffer_minutes" in payload and payload["buffer_minutes"] is not None:
+            habit.buffer_minutes = payload["buffer_minutes"]
         if "once_per_day" in payload and payload["once_per_day"] is not None:
             habit.once_per_day = payload["once_per_day"]
+
+        # Re-validate buffer against (possibly updated) duration
+        if (
+            "duration_minutes" in payload
+            or "buffer_minutes" in payload
+        ):
+            self._validate_buffer(
+                habit.buffer_minutes or 0,
+                habit.duration_minutes,
+            )
 
         next_type = prev_type
         if "habit_type" in payload and payload["habit_type"] is not None:
@@ -444,6 +471,7 @@ class HabitService:
                     sort_order=h.sort_order,
                     linked_sub_group_id=h.linked_sub_group_id,
                     duration_minutes=h.duration_minutes,
+                    buffer_minutes=h.buffer_minutes or 0,
                     once_per_day=h.once_per_day,
                     retired_at=h.retired_at,
                     group_name=group_names.get(h.group_id, "Unknown"),
