@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { Board, Completion, HabitGroup, ToggleCompletionRequest } from "../types";
 import { useUpdateGroup } from "../hooks";
+import { formatDurationMinutes } from "../lib/dayEstimate";
 import { getSubCategoryColor } from "../lib/subCategoryColors";
 import HabitTable from "./HabitTable";
 import NotesEditor from "./NotesEditor";
@@ -38,9 +39,14 @@ export default function HabitGroupSection({
   const [nameDraft, setNameDraft] = useState(group.name);
   const sectionColor = !isCore ? getSubCategoryColor(group.color) : null;
 
-  const deletableCount = board.habits.filter(
+  const groupHabits = board.habits.filter(
     (h) => h.group_id === group.id && h.linked_sub_group_id == null,
-  ).length;
+  );
+  const deletableCount = groupHabits.length;
+  const groupTotalMinutes = groupHabits.reduce(
+    (sum, h) => sum + h.duration_minutes,
+    0,
+  );
 
   const startRename = () => {
     if (isCore) return;
@@ -152,6 +158,11 @@ export default function HabitGroupSection({
             >
               {group.name}
             </h2>
+          )}
+          {!isCore && groupTotalMinutes > 0 && (
+            <span className="shrink-0 text-sm tabular-nums text-muted-foreground/70">
+              {formatDurationMinutes(groupTotalMinutes)}
+            </span>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
