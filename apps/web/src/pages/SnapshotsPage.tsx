@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConfirmModal } from "@/components/modal/ConfirmModal";
 import { useModal } from "@/components/providers/ModalProvider";
+import { parseServerDateTime } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import {
   useCreateSnapshot,
@@ -15,7 +16,7 @@ import {
 import SnapshotBoardPreview from "@/features/habits/components/SnapshotBoardPreview";
 
 function formatSnapshotDate(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
+  return parseServerDateTime(iso).toLocaleString(undefined, {
     month: "short",
     day: "numeric",
     year: "numeric",

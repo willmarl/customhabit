@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getVisibleDates } from "@/lib/dates";
+import { getVisibleDates, parseServerDateTime } from "@/lib/dates";
 import { useRetiredHabits, useRestoreHabit } from "../hooks";
 import { getCellProgress, getCompletion } from "../lib/completionUtils";
 import { formatDurationMinutes } from "../lib/dayEstimate";
@@ -15,7 +15,7 @@ type RetiredHabitsPanelProps = {
 };
 
 function formatRetiredDate(iso: string): string {
-  const d = new Date(iso);
+  const d = parseServerDateTime(iso);
   return d.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",

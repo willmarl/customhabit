@@ -1,3 +1,21 @@
+/**
+ * Parse API datetime strings. The Docker app stores naive UTC timestamps and
+ * FastAPI emits them without a `Z`/offset; browsers treat that form as *local*,
+ * which freezes the focus timer when the client TZ ≠ UTC (e.g. Chrome on EDT
+ * vs LibreWolf spoofing UTC via resistFingerprinting).
+ */
+export function parseServerDateTime(iso: string): Date {
+  const trimmed = iso.trim();
+  if (!trimmed) return new Date(NaN);
+  if (/[zZ]$/.test(trimmed) || /[+-]\d{2}:?\d{2}$/.test(trimmed)) {
+    return new Date(trimmed);
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return new Date(`${trimmed}T00:00:00Z`);
+  }
+  return new Date(`${trimmed}Z`);
+}
+
 export function parseTimeMinutes(hhmm: string): number {
   const [h, m] = hhmm.split(":").map(Number);
   return h * 60 + m;

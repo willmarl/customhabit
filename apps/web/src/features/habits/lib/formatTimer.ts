@@ -1,3 +1,5 @@
+import { parseServerDateTime } from "@/lib/dates";
+
 export function formatElapsedSeconds(totalSeconds: number): string {
   const s = Math.max(0, Math.floor(totalSeconds));
   const h = Math.floor(s / 3600);
@@ -20,7 +22,7 @@ export function formatSplitClock(totalSeconds: number): string {
 }
 
 export function elapsedSince(isoStart: string, nowMs = Date.now()): number {
-  return Math.max(0, (nowMs - new Date(isoStart).getTime()) / 1000);
+  return Math.max(0, (nowMs - parseServerDateTime(isoStart).getTime()) / 1000);
 }
 
 export function playlistRemainingSeconds(
