@@ -273,6 +273,7 @@ export default function HabitBoard() {
         onToggle={handleToggle}
         isCore
         onLinkedClick={scrollToSub}
+        sessions={activity?.sessions}
         activeHabitId={activeHabitId}
         activeStartedAt={activeSession?.started_at ?? null}
         previousDurations={activity?.previous_durations}
@@ -307,6 +308,7 @@ export default function HabitBoard() {
                   completions={completions}
                   subGroupColors={subGroupColors}
                   onToggle={handleToggle}
+                  sessions={activity?.sessions}
                   activeHabitId={activeHabitId}
                   activeStartedAt={activeSession?.started_at ?? null}
                   previousDurations={activity?.previous_durations}

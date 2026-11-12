@@ -1,6 +1,7 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { IconTooltipWrap } from "@/components/ui/icon-tooltip";
 import ThemeToggle from "@/components/theme/ThemeToggle";
+import { useCasinoState } from "@/features/casino/hooks";
 
 export default function Header() {
   return (
@@ -13,6 +14,7 @@ export default function Header() {
           Custom Habit
         </Link>
         <div className="flex items-center gap-3">
+          <CasinoLink />
           <Link
             to="/stats"
             className="text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -37,5 +39,27 @@ export default function Header() {
         </div>
       </div>
     </header>
+  );
+}
+
+function CasinoLink() {
+  const { data } = useCasinoState();
+  const count = data?.pending_count ?? 0;
+  return (
+    <NavLink
+      to="/casino"
+      className={({ isActive }) =>
+        `text-sm font-medium ${
+          isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+        }`
+      }
+    >
+      Casino
+      {count > 0 ? (
+        <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-semibold text-amber-950">
+          {count}
+        </span>
+      ) : null}
+    </NavLink>
   );
 }

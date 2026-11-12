@@ -33,6 +33,7 @@ export type Habit = {
   duration_minutes: number;
   buffer_minutes?: number;
   once_per_day: boolean;
+  reward_enabled?: boolean;
   retired_at?: string | null;
   habit_type?: HabitType;
   round_robin_items?: string[];
@@ -88,6 +89,7 @@ export type CreateHabitRequest = {
   duration_minutes?: number;
   buffer_minutes?: number;
   once_per_day?: boolean;
+  reward_enabled?: boolean;
   habit_type?: HabitType;
   round_robin_items?: string[];
 };
@@ -96,6 +98,7 @@ export type UpdateHabitRequest = {
   duration_minutes?: number;
   buffer_minutes?: number;
   once_per_day?: boolean;
+  reward_enabled?: boolean;
   habit_type?: HabitType;
   round_robin_items?: string[];
 };

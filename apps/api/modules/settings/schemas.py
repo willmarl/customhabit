@@ -21,6 +21,16 @@ class AppSettings(SQLModel, table=True):
     playlist_minutes: int = Field(default=53)
     # Habits shorter than this are exempt from double-loop in loop mode (Phase 3).
     loop_exempt_below_minutes: int = Field(default=60)
+    casino_tier1_reward: str = Field(default="")
+    casino_tier2_reward: str = Field(default="")
+    casino_tier3_reward: str = Field(default="")
+    casino_jackpot_reward: str = Field(default="")
+    casino_prize_mini_name: str = Field(default="")
+    casino_prize_mini_tokens: int = Field(default=15)
+    casino_prize_mid_name: str = Field(default="")
+    casino_prize_mid_tokens: int = Field(default=40)
+    casino_prize_moon_name: str = Field(default="")
+    casino_prize_moon_tokens: int = Field(default=100)
 
 
 class AppSettingsRead(SQLModel):

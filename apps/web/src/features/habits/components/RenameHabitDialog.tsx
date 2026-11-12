@@ -31,6 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { IconTooltipButton } from "@/components/ui/icon-tooltip";
+import { formatGoldChance } from "@/features/casino/gold";
 import { useUpdateHabit } from "../hooks";
 import type { Habit, HabitType, UpdateHabitRequest } from "../types";
 
@@ -161,6 +162,7 @@ export default function RenameHabitDialog({
     String(habit.buffer_minutes ?? 0),
   );
   const [oncePerDay, setOncePerDay] = useState(habit.once_per_day);
+  const [rewardEnabled, setRewardEnabled] = useState(habit.reward_enabled ?? false);
   const [habitType, setHabitType] = useState<HabitType>(
     habit.habit_type ?? "normal",
   );
@@ -213,6 +215,12 @@ export default function RenameHabitDialog({
       data.buffer_minutes = parsedBuffer;
     }
     if (oncePerDay !== habit.once_per_day) data.once_per_day = oncePerDay;
+    if (
+      habit.linked_sub_group_id == null &&
+      rewardEnabled !== (habit.reward_enabled ?? false)
+    ) {
+      data.reward_enabled = rewardEnabled;
+    }
 
     const prevType = habit.habit_type ?? "normal";
     const prevItems = habit.round_robin_items ?? [];
@@ -245,6 +253,12 @@ export default function RenameHabitDialog({
 
     updateHabit({ id: habit.id, data }, { onSuccess: () => onOpenChange(false) });
   };
+
+  const parsedGoldMinutes = parseInt(duration, 10);
+  const goldMinutes =
+    Number.isNaN(parsedGoldMinutes) || parsedGoldMinutes < 1
+      ? habit.duration_minutes
+      : parsedGoldMinutes;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -308,6 +322,22 @@ export default function RenameHabitDialog({
                 </span>
               </span>
             </label>
+            {habit.linked_sub_group_id == null ? (
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <Checkbox
+                  checked={rewardEnabled}
+                  onCheckedChange={(v) => setRewardEnabled(v === true)}
+                />
+                <span>
+                  Casino token
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    One token when this habit is finished.{" "}
+                    {formatGoldChance(goldMinutes)} chance of gold at this
+                    length. The other colors stay even so they can still match.
+                  </span>
+                </span>
+              </label>
+            ) : null}
 
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <Checkbox

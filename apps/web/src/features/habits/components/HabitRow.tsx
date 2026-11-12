@@ -13,6 +13,7 @@ import {
 } from "../lib/completionUtils";
 import { getSubCategoryColor } from "../lib/subCategoryColors";
 import { formatDurationMinutes } from "../lib/dayEstimate";
+import { formatGoldChance } from "@/features/casino/gold";
 import {
   isRoundRobinHabit,
   resolveRoundRobinItem,
@@ -171,6 +172,14 @@ export default function HabitRow({
                 title="Once per day — fixed session"
               >
                 once daily
+              </span>
+            ) : null}
+            {habit.reward_enabled ? (
+              <span
+                className="shrink-0 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-500/20 dark:text-amber-300"
+                title={`${formatGoldChance(habit.duration_minutes)} chance of a gold token`}
+              >
+                token
               </span>
             ) : null}
             <span

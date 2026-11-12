@@ -4,7 +4,13 @@ import { useModal } from "@/components/providers/ModalProvider";
 import { IconTooltipButton } from "@/components/ui/icon-tooltip";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type { Board, Completion, HabitGroup, ToggleCompletionRequest } from "../types";
+import type {
+  Board,
+  Completion,
+  HabitGroup,
+  HabitSession,
+  ToggleCompletionRequest,
+} from "../types";
 import { useUpdateGroup } from "../hooks";
 import { formatDurationMinutes } from "../lib/dayEstimate";
 import { getSubCategoryColor } from "../lib/subCategoryColors";
@@ -22,6 +28,7 @@ type HabitGroupSectionProps = {
   onToggle: (data: ToggleCompletionRequest) => void;
   isCore?: boolean;
   onLinkedClick?: (subGroupId: number) => void;
+  sessions?: HabitSession[];
   activeHabitId?: number | null;
   activeStartedAt?: string | null;
   previousDurations?: Record<string, number>;
@@ -39,6 +46,7 @@ export default function HabitGroupSection({
   onToggle,
   isCore = false,
   onLinkedClick,
+  sessions = [],
   activeHabitId = null,
   activeStartedAt = null,
   previousDurations,
@@ -61,6 +69,14 @@ export default function HabitGroupSection({
     (sum, h) => sum + h.duration_minutes,
     0,
   );
+  const groupHabitIds = new Set(groupHabits.map((h) => h.id));
+  const actualSeconds = sessions.reduce((sum, session) => {
+    if (!groupHabitIds.has(session.habit_id)) return sum;
+    if (session.duration_seconds == null) return sum;
+    return sum + session.duration_seconds;
+  }, 0);
+  const actualMinutes =
+    actualSeconds > 0 ? Math.max(1, Math.round(actualSeconds / 60)) : 0;
 
   const startRename = () => {
     if (isCore) return;
@@ -173,9 +189,20 @@ export default function HabitGroupSection({
               {group.name}
             </h2>
           )}
-          {!isCore && groupTotalMinutes > 0 && (
-            <span className="shrink-0 text-sm tabular-nums text-muted-foreground/70">
-              {formatDurationMinutes(groupTotalMinutes)}
+          {!isCore && (groupTotalMinutes > 0 || actualMinutes > 0) && (
+            <span
+              className="shrink-0 text-sm tabular-nums text-muted-foreground/70"
+              title={
+                actualMinutes > 0
+                  ? `Estimated ${formatDurationMinutes(groupTotalMinutes)} · timed ${formatDurationMinutes(actualMinutes)} today`
+                  : `Estimated ${formatDurationMinutes(groupTotalMinutes)}`
+              }
+            >
+              {groupTotalMinutes > 0 && formatDurationMinutes(groupTotalMinutes)}
+              {groupTotalMinutes > 0 && actualMinutes > 0 && " · "}
+              {actualMinutes > 0 && (
+                <span>took {formatDurationMinutes(actualMinutes)}</span>
+              )}
             </span>
           )}
         </div>

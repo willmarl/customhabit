@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./index.css";
 import Providers from "./components/providers/Providers.tsx";
 import Layout from "./components/layout/Layout.tsx";
+import CasinoPage from "./pages/CasinoPage.tsx";
 import HabitsPage from "./pages/HabitsPage.tsx";
 import SettingsPage from "./pages/SettingsPage.tsx";
 import SnapshotsPage from "./pages/SnapshotsPage.tsx";
@@ -16,6 +17,7 @@ createRoot(document.getElementById("root")!).render(
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<HabitsPage />} />
+            <Route path="/casino" element={<CasinoPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/snapshots" element={<SnapshotsPage />} />
             <Route path="/stats" element={<StatsPage />} />

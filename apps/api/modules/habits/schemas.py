@@ -54,6 +54,7 @@ class Habit(SQLModel, table=True):
     duration_minutes: int = Field(default=60)
     buffer_minutes: int = Field(default=0)
     once_per_day: bool = Field(default=False)
+    reward_enabled: bool = Field(default=False)
     retired_at: Optional[datetime] = None
     habit_type: str = Field(default=HabitType.normal.value)
     round_robin_items: list[str] = Field(
@@ -112,6 +113,7 @@ class HabitRead(SQLModel):
     duration_minutes: int
     buffer_minutes: int = 0
     once_per_day: bool
+    reward_enabled: bool = False
     retired_at: Optional[datetime] = None
     habit_type: str = HabitType.normal.value
     round_robin_items: list[str] = Field(default_factory=list)
@@ -215,6 +217,7 @@ class CreateHabitRequest(SQLModel):
     duration_minutes: Optional[int] = None
     buffer_minutes: Optional[int] = None
     once_per_day: Optional[bool] = None
+    reward_enabled: Optional[bool] = None
     habit_type: Optional[HabitType] = None
     round_robin_items: Optional[list[str]] = None
 
@@ -224,6 +227,7 @@ class UpdateHabitRequest(SQLModel):
     duration_minutes: Optional[int] = None
     buffer_minutes: Optional[int] = None
     once_per_day: Optional[bool] = None
+    reward_enabled: Optional[bool] = None
     habit_type: Optional[HabitType] = None
     round_robin_items: Optional[list[str]] = None
 

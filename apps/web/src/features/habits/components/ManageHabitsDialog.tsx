@@ -8,6 +8,7 @@ import { ConfirmModal } from "@/components/modal/ConfirmModal";
 import { useModal } from "@/components/providers/ModalProvider";
 import { IconTooltipButton } from "@/components/ui/icon-tooltip";
 import type { Habit } from "../types";
+import { formatGoldChance } from "@/features/casino/gold";
 import { useBoard, useDeleteHabit, useRetireHabit, useUpdateHabit } from "../hooks";
 
 type ManageHabitsDialogProps = {
@@ -22,6 +23,7 @@ function ManageHabitRow({ habit }: { habit: Habit }) {
     String(habit.buffer_minutes ?? 0),
   );
   const [oncePerDay, setOncePerDay] = useState(habit.once_per_day);
+  const [rewardEnabled, setRewardEnabled] = useState(habit.reward_enabled ?? false);
   const { openModal } = useModal();
   const { mutate: updateHabit } = useUpdateHabit();
   const { mutateAsync: retireHabit } = useRetireHabit();
@@ -32,12 +34,14 @@ function ManageHabitRow({ habit }: { habit: Habit }) {
     setDuration(String(habit.duration_minutes));
     setBuffer(String(habit.buffer_minutes ?? 0));
     setOncePerDay(habit.once_per_day);
+    setRewardEnabled(habit.reward_enabled ?? false);
   }, [
     habit.id,
     habit.name,
     habit.duration_minutes,
     habit.buffer_minutes,
     habit.once_per_day,
+    habit.reward_enabled,
   ]);
 
   const saveName = () => {
@@ -93,6 +97,19 @@ function ManageHabitRow({ habit }: { habit: Habit }) {
       updateHabit({ id: habit.id, data: { once_per_day: checked } });
     }
   };
+
+  const handleReward = (checked: boolean) => {
+    setRewardEnabled(checked);
+    if (checked !== (habit.reward_enabled ?? false)) {
+      updateHabit({ id: habit.id, data: { reward_enabled: checked } });
+    }
+  };
+
+  const parsedMinutes = parseInt(duration, 10);
+  const goldMinutes =
+    Number.isNaN(parsedMinutes) || parsedMinutes < 1
+      ? habit.duration_minutes
+      : parsedMinutes;
 
   const handleRetire = () => {
     openModal({
@@ -183,6 +200,16 @@ function ManageHabitRow({ habit }: { habit: Habit }) {
             onCheckedChange={(v) => handleOncePerDay(v === true)}
           />
           Once per day
+        </label>
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+          <Checkbox
+            checked={rewardEnabled}
+            onCheckedChange={(v) => handleReward(v === true)}
+          />
+          Casino
+          <span title="Longer habits are more likely to draw gold. Every habit still draws one token.">
+            {formatGoldChance(goldMinutes)} gold
+          </span>
         </label>
       </div>
     </li>

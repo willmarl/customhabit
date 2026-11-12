@@ -160,6 +160,7 @@ class SnapshotService:
                     linked_src.buffer_minutes if linked_src else 0
                 ),
                 once_per_day=linked_src.once_per_day if linked_src else False,
+                reward_enabled=linked_src.reward_enabled if linked_src else False,
                 retired_at=linked_src.retired_at if linked_src else None,
             )
             self.session.add(linked)
@@ -176,6 +177,7 @@ class SnapshotService:
                         duration_minutes=h.duration_minutes,
                         buffer_minutes=h.buffer_minutes or 0,
                         once_per_day=h.once_per_day,
+                        reward_enabled=h.reward_enabled,
                         retired_at=h.retired_at,
                         habit_type=h.habit_type,
                         round_robin_items=list(h.round_robin_items or []),
@@ -199,6 +201,7 @@ class SnapshotService:
                     duration_minutes=h.duration_minutes,
                     buffer_minutes=h.buffer_minutes or 0,
                     once_per_day=h.once_per_day,
+                    reward_enabled=h.reward_enabled,
                     retired_at=h.retired_at,
                     habit_type=h.habit_type,
                     round_robin_items=list(h.round_robin_items or []),

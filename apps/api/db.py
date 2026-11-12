@@ -2,6 +2,7 @@ from sqlalchemy import text
 from sqlmodel import SQLModel, Session, create_engine, select
 
 from modules.settings.schemas import AppSettings
+from modules.casino.schemas import CasinoPlay, CasinoToken  # noqa: F401
 from modules.habits.schemas import (
     DayRun,
     HabitBoardSnapshot,
@@ -139,6 +140,72 @@ def migrate_schema() -> None:
             "habit",
             "buffer_minutes",
             "ALTER TABLE habit ADD COLUMN buffer_minutes INTEGER NOT NULL DEFAULT 0",
+        )
+        _add_column_if_missing(
+            conn,
+            "habit",
+            "reward_enabled",
+            "ALTER TABLE habit ADD COLUMN reward_enabled INTEGER NOT NULL DEFAULT 0",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "casino_tier1_reward",
+            "ALTER TABLE appsettings ADD COLUMN casino_tier1_reward TEXT NOT NULL DEFAULT ''",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "casino_tier2_reward",
+            "ALTER TABLE appsettings ADD COLUMN casino_tier2_reward TEXT NOT NULL DEFAULT ''",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "casino_tier3_reward",
+            "ALTER TABLE appsettings ADD COLUMN casino_tier3_reward TEXT NOT NULL DEFAULT ''",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "casino_jackpot_reward",
+            "ALTER TABLE appsettings ADD COLUMN casino_jackpot_reward TEXT NOT NULL DEFAULT ''",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "casino_prize_mini_name",
+            "ALTER TABLE appsettings ADD COLUMN casino_prize_mini_name TEXT NOT NULL DEFAULT ''",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "casino_prize_mini_tokens",
+            "ALTER TABLE appsettings ADD COLUMN casino_prize_mini_tokens INTEGER NOT NULL DEFAULT 15",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "casino_prize_mid_name",
+            "ALTER TABLE appsettings ADD COLUMN casino_prize_mid_name TEXT NOT NULL DEFAULT ''",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "casino_prize_mid_tokens",
+            "ALTER TABLE appsettings ADD COLUMN casino_prize_mid_tokens INTEGER NOT NULL DEFAULT 40",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "casino_prize_moon_name",
+            "ALTER TABLE appsettings ADD COLUMN casino_prize_moon_name TEXT NOT NULL DEFAULT ''",
+        )
+        _add_column_if_missing(
+            conn,
+            "appsettings",
+            "casino_prize_moon_tokens",
+            "ALTER TABLE appsettings ADD COLUMN casino_prize_moon_tokens INTEGER NOT NULL DEFAULT 100",
         )
         # Migrate from short-lived ring_early_minutes name if present
         cols = {

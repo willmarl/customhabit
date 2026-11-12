@@ -4,6 +4,8 @@ from fastapi import HTTPException
 from sqlmodel import Session, select, delete
 
 from lib.dates import resolve_habit_date
+from modules.casino.schemas import CasinoPlay, CasinoToken
+from modules.casino.service import CasinoService
 from modules.settings.service import SettingsService
 from .completion_logic import loops_after_toggle
 from .round_robin import normalize_round_robin_items
@@ -15,6 +17,7 @@ from .schemas import (
     MIN_HABIT_MINUTES,
     Completion,
     CompletionRead,
+    CompletionStatus,
     CreateHabitRequest,
     CreateSubGroupRequest,
     Habit,
@@ -320,6 +323,7 @@ class HabitService:
             duration_minutes=duration,
             buffer_minutes=buffer,
             once_per_day=data.once_per_day or False,
+            reward_enabled=bool(data.reward_enabled) if data.reward_enabled else False,
             habit_type=habit_type,
             round_robin_items=items,
             round_robin_started_on=started_on,
@@ -352,6 +356,13 @@ class HabitService:
             habit.buffer_minutes = payload["buffer_minutes"]
         if "once_per_day" in payload and payload["once_per_day"] is not None:
             habit.once_per_day = payload["once_per_day"]
+        if "reward_enabled" in payload and payload["reward_enabled"] is not None:
+            if habit.linked_sub_group_id is not None and payload["reward_enabled"]:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Linked habits are completed by their sub-category and can't join the casino",
+                )
+            habit.reward_enabled = payload["reward_enabled"]
 
         # Re-validate buffer against (possibly updated) duration
         if (
@@ -410,6 +421,8 @@ class HabitService:
         self._ensure_editable_habit(habit)
 
         self._delete_habit_completions([habit_id])
+        self.session.exec(delete(CasinoToken).where(CasinoToken.habit_id == habit_id))
+        self.session.exec(delete(CasinoPlay).where(CasinoPlay.habit_id == habit_id))
         self.session.delete(habit)
         self.session.commit()
 
@@ -473,6 +486,7 @@ class HabitService:
                     duration_minutes=h.duration_minutes,
                     buffer_minutes=h.buffer_minutes or 0,
                     once_per_day=h.once_per_day,
+                    reward_enabled=h.reward_enabled,
                     retired_at=h.retired_at,
                     group_name=group_names.get(h.group_id, "Unknown"),
                 )
@@ -521,10 +535,14 @@ class HabitService:
                 if existing.id is not None:
                     session_svc.remove_inferred_completion(existing.id)
                 self.session.delete(existing)
+                CasinoService(self.session).cancel_undrawn_play(data.habit_id, data.date)
                 self.session.commit()
             return None
 
         loops_done, loops_target, status = result
+        previously_done = (
+            existing is not None and existing.status == CompletionStatus.done.value
+        )
         now = datetime.now()
 
         if existing is None:
@@ -553,6 +571,9 @@ class HabitService:
 
         if day_run is None and data.date == resolve_habit_date(day_start=settings.day_start_time):
             session_svc.ensure_day_run(data.date, now)
+
+        if status == CompletionStatus.done.value and not previously_done:
+            CasinoService(self.session).queue_completion_play(habit, data.date)
 
         self.session.commit()
         self.session.refresh(completion)

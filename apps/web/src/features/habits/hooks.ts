@@ -113,6 +113,7 @@ export const useToggleCompletion = () => {
     mutationFn: (data: ToggleCompletionRequest) => toggleCompletion(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BOARD_KEY });
+      queryClient.invalidateQueries({ queryKey: ["casino"] });
     },
   });
 };
