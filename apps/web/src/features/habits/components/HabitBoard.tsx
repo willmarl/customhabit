@@ -139,6 +139,11 @@ export default function HabitBoard() {
         data.date === today
           ? activeSession
           : null;
+      // Silence immediately on click — don't wait for the toggle round-trip
+      // (scheduled Web Audio bursts would otherwise keep playing).
+      if (sessionToStop) {
+        stopBreakDoneRing();
+      }
       toggleCompletion(data, {
         onSuccess: (result) => {
           if (

@@ -123,21 +123,26 @@ export default function HabitTimerControl({
       stopBreakDoneRing();
       return;
     }
+
+    let cancelled = false;
+    let hasRung = false;
+
     const tick = () => {
+      if (cancelled) return;
       const now = Date.now();
       setNowMs(now);
       const elapsed = elapsedSince(startedAt, now);
-      if (elapsed >= ringThreshold) {
-        setRingStartedAt((prev) => {
-          if (prev != null) return prev;
-          startTimedRing(RING_MS);
-          return now;
-        });
+      if (elapsed >= ringThreshold && !hasRung) {
+        hasRung = true;
+        startTimedRing(RING_MS);
+        setRingStartedAt(now);
       }
     };
+
     tick();
     const id = window.setInterval(tick, 100);
     return () => {
+      cancelled = true;
       window.clearInterval(id);
       stopBreakDoneRing();
     };
